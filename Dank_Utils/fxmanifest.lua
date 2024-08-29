@@ -4,7 +4,7 @@ game 'gta5'
 name 'Doii_Utils'
 author 'Dankbudbaker'
 description 'Dank_Utils Framework & Script Compatibility'
-version '1.0.0'
+script_version '1.0.0'
 
 -- **INSTRUCTIONS:**
 -- If you DO NOT use the framework or library mentioned, add or keep `--` at the start of the line to disable it.
