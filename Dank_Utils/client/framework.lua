@@ -2,12 +2,7 @@
 --- @desc A module that provides a unified interface for different frameworks like qbx_core, qb-core, and es_extended.
 local sharedConfig = require 'config.shared'
 Framework = Framework or {}
-
-Framework.Status = {
-    Framework = nil,
-    Inventory = nil,
-    Banking = nil
-}
+Framework.Status = {}
 
 if sharedConfig.Framework == 'qbx_core' then
     local ox_inventory = exports.ox_inventory
@@ -42,6 +37,11 @@ if sharedConfig.Framework == 'qbx_core' then
         else
             return "Unknown Item" -- Return fallback if item is not found
         end
+    end
+
+    --- Toggles the player's duty status.
+    Framework.ToggleDuty = function()
+        TriggerServerEvent("QBCore:ToggleDuty")
     end
 
     --- Checks if the player has a certain amount of an item in their inventory.
@@ -95,6 +95,15 @@ if sharedConfig.Framework == 'qbx_core' then
         end
     end
 
+    --- Trigger a callback with qbx_core.
+    --- @param callbackName string The name of the callback to trigger.
+    --- @param cb function The callback function to handle the response.
+    Framework.TriggerCallback = function(callbackName, cb)
+        exports.qbx_core:TriggerCallback(callbackName, function(data)
+            cb(data)
+        end)
+    end
+
     Framework.Status.Framework = sharedConfig.Framework
 
 elseif sharedConfig.Framework == 'qb-core' then
@@ -126,6 +135,11 @@ elseif sharedConfig.Framework == 'qb-core' then
         end
     end
 
+    --- Toggles the player's duty status.
+    Framework.ToggleDuty = function()
+        TriggerServerEvent("QBCore:ToggleDuty")
+    end
+
     --- Checks if the player has a certain amount of an item in their inventory.
     --- @param item string The item name to check for.
     --- @param amount number The amount of the item required.
@@ -153,6 +167,13 @@ elseif sharedConfig.Framework == 'qb-core' then
             disableMouse = disableControls.disableMouse,
             disableCombat = disableControls.disableCombat,
         }, animation, prop, propTwo, onFinish, onCancel)
+    end
+
+    --- Triggers a callback in QBCore.
+    --- @param callbackName string The name of the callback to trigger.
+    --- @param cb function The callback function to execute with the result.
+    Framework.TriggerCallback = function(callbackName, cb)
+        QBCore.Functions.TriggerCallback(callbackName, cb)
     end
 
     Framework.Status.Framework = sharedConfig.Framework
@@ -183,6 +204,11 @@ elseif sharedConfig.Framework == 'es_extended' then
         else
             return "Unknown Item" -- Return fallback if item is not found
         end
+    end
+
+    --- Toggles the player's duty status.
+    Framework.ToggleDuty = function()
+        TriggerServerEvent("esx:toggleDuty")  -- Adjust event name if necessary
     end
 
     --- Checks if the player has a certain amount of an item in their inventory.
@@ -221,6 +247,13 @@ elseif sharedConfig.Framework == 'es_extended' then
             onFinish = onFinish,
             onCancel = onCancel
         })
+    end
+
+    --- Triggers a callback in ESX.
+    --- @param callbackName string The name of the callback to trigger.
+    --- @param cb function The callback function to execute with the result.
+    Framework.TriggerCallback = function(callbackName, cb)
+        ESX.TriggerServerCallback(callbackName, cb)
     end
 
     Framework.Status.Framework = sharedConfig.Framework
@@ -304,18 +337,5 @@ elseif sharedConfig.Inventory == 'esx_inventory' or sharedConfig.Inventory == 'e
 else
     error("Unsupported inventory system: " .. (sharedConfig.Inventory or "nil"))
 end
-
-
--- Print status message once all components are initialized
-CreateThread(function()
-    if Framework.Status.Framework and Framework.Status.Inventory then
-        print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^2Dank Client Utils is Loaded.^0\n" ..
-      "^5Framework: ^3" .. tostring(Framework.Status.Framework) .. "^0\n" ..
-      "^5Inventory: ^3" .. tostring(Framework.Status.Inventory) .. "^0\n" ..
-      "^5Banking: ^3" .. tostring(Framework.Status.Banking) .. "^0")
-    else
-        print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^1Dank Utils is not ready. Please check the shared config.^0")
-    end
-end)
 
 return Framework
