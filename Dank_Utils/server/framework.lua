@@ -1,7 +1,7 @@
 --- @module Framework
---- @desc A module that provides a unified interface for different frameworks like qbx-core, qb-core, and es_extended.
+--- @desc A module that provides a unified interface for different frameworks like qbx_core, qb-core, and es_extended.
 local sharedConfig = require 'config.shared'
-local Framework = {}
+Framework = Framework or {}
 
 Framework.Status = {
     Framework = nil,
@@ -9,7 +9,7 @@ Framework.Status = {
     Banking = nil
 }
 
-if sharedConfig.Framework == 'qbx-core' then
+if sharedConfig.Framework == 'qbx_core' then
     --- Retrieves a player object by their source identifier.
     --- @param source number|string The player's source identifier.
     --- @return table|nil GetPlayer The player object if found, otherwise nil.
@@ -349,7 +349,8 @@ else
     end
 end
 
--- Initialize Inventory
+Framework.Inventory = {}
+
 if sharedConfig.Inventory == 'ox_inventory' then
 
     --- Function to register a stash with ox_inventory
@@ -370,9 +371,11 @@ end
 
 --- Print status message once all components are initialized
 CreateThread(function()
-    Wait(500) -- Delay to ensure all components are properly initialized
     if Framework.Status.Framework and Framework.Status.Inventory and Framework.Status.Banking then
-        print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^2Dank Server Utils is Loaded. ^5Framework: ^3" .. tostring(Framework.Status.Framework) .. " ^5Inventory: ^3" .. tostring(Framework.Status.Inventory) .. " ^5Banking: ^3" .. tostring(Framework.Status.Banking) .. "^0")
+        print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^2Dank Server Utils is Loaded.^0\n" ..
+      "^5Framework: ^3" .. tostring(Framework.Status.Framework) .. "^0\n" ..
+      "^5Inventory: ^3" .. tostring(Framework.Status.Inventory) .. "^0\n" ..
+      "^5Banking: ^3" .. tostring(Framework.Status.Banking) .. "^0")
     else
         print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^1Dank Utils is not ready. Please check the shared config.^0")
     end

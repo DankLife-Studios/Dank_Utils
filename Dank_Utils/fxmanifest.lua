@@ -11,17 +11,18 @@ script_version '1.0.0'
 -- If you USE the framework, ensure there is no `--` at the beginning of the line.
 
 client_scripts {
-    '@qbx_core/modules/playerdata.lua', -- DISABLE THIS LINE IF YOU DON'T USE QBX-CORE (Keep or add --)
-    'client/*.lua',
+    '@qbx_core/modules/playerdata.lua', -- DISABLE THIS LINE IF YOU DON'T USE qbx_core (Keep or add --)
+    'client/framework.lua',
 }
 
 server_scripts {
-    'server/*.lua',
+    'server/framework.lua',
+    'server/version.lua',
 }
 
 shared_scripts {
     '@ox_lib/init.lua', -- DISABLE THIS LINE IF YOU DON'T USE OX_LIB (Keep or add --)
-    '@qbx_core/modules/lib.lua', -- DISABLE THIS LINE IF YOU DON'T USE QBX-CORE (Keep or add --)
+    '@qbx_core/modules/lib.lua', -- DISABLE THIS LINE IF YOU DON'T USE qbx_core (Keep or add --)
     'shared/exports.lua',
 }
 

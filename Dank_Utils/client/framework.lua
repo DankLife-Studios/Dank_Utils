@@ -1,16 +1,22 @@
 --- @module Framework
---- @desc A module that provides a unified interface for different frameworks like qbx-core, qb-core, and es_extended.
+--- @desc A module that provides a unified interface for different frameworks like qbx_core, qb-core, and es_extended.
 local sharedConfig = require 'config.shared'
-local Framework = {}
+Framework = Framework or {}
 
 Framework.Status = {
     Framework = nil,
-    Inventory = nil
+    Inventory = nil,
+    Banking = nil
 }
 
-if sharedConfig.Framework == 'qbx-core' then
-    Framework.PlayerData = QBX.PlayerData
+if sharedConfig.Framework == 'qbx_core' then
     local ox_inventory = exports.ox_inventory
+
+    --- Retrieves the player data from the QBX core.
+    --- @return table PlayerData The player data table.
+    Framework.PlayerData = function()
+        return QBX.PlayerData
+    end
 
     --- Notify function to display notifications to the player.
     --- @param message string The message to be displayed.
@@ -23,9 +29,16 @@ if sharedConfig.Framework == 'qbx-core' then
     --- @param itemName string The name of the item to look up.
     --- @return string getItem The item's label or "Unknown Item" if not found.
     Framework.GetItemLabel = function(itemName)
-        local item = ox_inventory:getItem(itemName)
-        if item and item.label then
-            return item.label
+        local itemNames = {}
+
+        -- Retrieve all items and their labels from ox_inventory
+        for item, data in pairs(ox_inventory:Items()) do
+            itemNames[item] = data.label
+        end
+
+        -- Check if the item exists and has a label
+        if itemNames[itemName] then
+            return itemNames[itemName]
         else
             return "Unknown Item" -- Return fallback if item is not found
         end
@@ -36,7 +49,7 @@ if sharedConfig.Framework == 'qbx-core' then
     --- @param amount number The amount of the item required.
     --- @return boolean HasItem True if the player has enough of the item, false otherwise.
     Framework.HasItem = function(item, amount)
-        local count = exports.ox_inventory:Search('count', item)
+        local count = ox_inventory:Search('count', item)
         return count >= amount
     end
 
@@ -87,7 +100,12 @@ if sharedConfig.Framework == 'qbx-core' then
 elseif sharedConfig.Framework == 'qb-core' then
     -- Initialize QBCore framework
     local QBCore = exports['qb-core']:GetCoreObject()
-    Framework.PlayerData = QBCore.Functions.GetPlayerData() -- Ensure this is the correct method to get player data
+
+    --- Retrieves the player data from the QBCore core.
+    --- @return table PlayerData The player data table.
+    Framework.PlayerData = function()
+        return QBCore.Functions.GetPlayerData()
+    end
 
     --- Notify function to display notifications to the player.
     --- @param message string The message to be displayed.
@@ -140,9 +158,13 @@ elseif sharedConfig.Framework == 'qb-core' then
     Framework.Status.Framework = sharedConfig.Framework
 
 elseif sharedConfig.Framework == 'es_extended' then
-    -- Initialize ESX framework
     local ESX = exports['es_extended']:getSharedObject()
-    Framework.PlayerData = ESX.GetPlayerData()
+
+    --- Retrieves the player data from the ESX core.
+    --- @return table PlayerData The player data table.
+    Framework.PlayerData = function()
+        return ESX.GetPlayerData()
+    end
 
     --- Notify function to display notifications to the player.
     --- @param message string The message to be displayed.
@@ -205,6 +227,12 @@ elseif sharedConfig.Framework == 'es_extended' then
 
 else
     error("Unsupported framework: " .. (sharedConfig.Framework or "nil"))
+end
+
+Framework.Inventory = {}
+
+if sharedConfig.Banking == 'qb-management' or sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' or sharedConfig.Banking == 'Renewed-Banking' then
+    Framework.Status.Banking = sharedConfig.Banking
 end
 
 Framework.Inventory = {}
@@ -277,11 +305,14 @@ else
     error("Unsupported inventory system: " .. (sharedConfig.Inventory or "nil"))
 end
 
+
 -- Print status message once all components are initialized
 CreateThread(function()
-    Wait(500) -- Delay to ensure all components are properly initialized
     if Framework.Status.Framework and Framework.Status.Inventory then
-        print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^2Dank Client Utils is Loaded. ^5Framework: ^3" .. tostring(Framework.Status.Framework) .. " ^5Inventory: ^3" .. tostring(Framework.Status.Inventory) .. " ^5Banking: ^3" .. tostring(Framework.Status.Banking) .. "^0")
+        print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^2Dank Client Utils is Loaded.^0\n" ..
+      "^5Framework: ^3" .. tostring(Framework.Status.Framework) .. "^0\n" ..
+      "^5Inventory: ^3" .. tostring(Framework.Status.Inventory) .. "^0\n" ..
+      "^5Banking: ^3" .. tostring(Framework.Status.Banking) .. "^0")
     else
         print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^1Dank Utils is not ready. Please check the shared config.^0")
     end

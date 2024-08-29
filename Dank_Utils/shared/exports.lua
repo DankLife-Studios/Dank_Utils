@@ -8,5 +8,5 @@
 -- @usage local Framework = exports['Dank_Utils'].Framework()
 -- @return table: A deep copy of the Framework object, ensuring isolated state and no side effects on the original Framework object.
 exports('Framework', function()
-    return Framework.tables.deep_copy(Framework)
+    return Framework
 end)

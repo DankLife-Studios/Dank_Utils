@@ -65,19 +65,17 @@ function CheckForUpdates()
     end)
 end
 
--- Event handler to check the resource name and perform version check
-AddEventHandler('onResourceStart', function(resourceName)
+-- Create a thread to check the resource name and perform version check
+CreateThread(function()
     local currentResourceName = GetCurrentResourceName()
 
+    -- Check if the resource name is correct
     if currentResourceName ~= "Dank_Utils" then
-        print("^1ERROR: Resource name is not Dank_Utils. To avoid issues, please ensure the resource name is Dank_Utils.^0")
+        print("^1ERROR: Resource name is not Dank_Utils. Please ensure the resource name is Dank_Utils.^0")
         return
     end
 
-    if resourceName ~= currentResourceName then
-        print("^1ERROR: Resource name (" .. resourceName .. ") does not match the expected name (" .. currentResourceName .. "). Please rename the resource to avoid issues.^0")
-        return
-    end
-
+    -- Perform version check
     CheckForUpdates()
 end)
+

@@ -13,7 +13,7 @@ end
 
 -- Manual selection (edit this to choose your preferred script if auto-detection is not needed)
 -- @type table
--- @field Framework string Set to 'AutoDetect' or specific framework names ('qbx-core', 'qb-core', 'es_extended').
+-- @field Framework string Set to 'AutoDetect' or specific framework names ('qbx_core', 'qb-core', 'es_extended').
 -- @field Inventory string Set to 'AutoDetect' or specific inventory system names ('ox_inventory', 'qb-old-inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory').
 -- @field Banking string Set to 'AutoDetect' or specific banking system names ('Renewed-Banking', 'qb-management', 'okokBanking', 'qb-banking', 'esx_jobbank').
 local manualSelection = {
@@ -27,7 +27,7 @@ local manualSelection = {
 -- @field detectedFramework string The detected framework from the list or 'none'.
 -- @field detectedInventory string The detected inventory system from the list or 'none'.
 -- @field detectedBanking string The detected banking system from the list or 'none'.
-local detectedFramework = getActiveResource({'qbx-core', 'qb-core', 'es_extended'})
+local detectedFramework = getActiveResource({'qbx_core', 'qb-core', 'es_extended'})
 local detectedInventory = getActiveResource({'ox_inventory', 'qb-old-inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory'})
 local detectedBanking = getActiveResource({'Renewed-Banking', 'qb-management', 'okokBanking', 'qb-banking', 'esx_jobbank'})
 
@@ -63,10 +63,16 @@ CreateThread(function()
         table.insert(missingComponents, 'banking systems')
     end
 
-    -- Print a professional message if any components are missing
+    --- Print a professional message if any components are missing
     if #missingComponents > 0 then
-        local componentList = table.concat(missingComponents, ', ')
-        print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^1The following supported components are missing: " .. componentList .. ". ^0Please submit a pull request with the necessary support or open a ticket on our Discord server, and we will work to add the support promptly.^0")
+        local componentList = table.concat(missingComponents, '\n') -- Use newline for each component
+        local message = string.format(
+            "^2[^6DankLife Gaming ^2- ^0%s^2] ^1The following supported components are missing:^0\n" ..
+            "^1%s^0\n" ..
+            "^1Please submit a pull request with the necessary support or open a ticket on our Discord server, and we will work to add the support promptly.^0",
+            GetCurrentResourceName(), componentList
+        )
+        print(message)
     end
 end)
 
