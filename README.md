@@ -46,11 +46,15 @@ Dank_Utils supports automatic detection and integration with the following syste
 
 ## Installation
 
-1. **Add to Your server.cfg**: Ensure the Dank_Utils resource is started before any other resource that depends on it.
-  ensure Dank_Utils
+1. **Add to Your Server Resources**: Download or clone the `Dank_Utils` repository and place the `Dank_Utils` folder into your FiveM server's `resources` directory.
 
+2. **Update `server.cfg`**: Ensure the Dank_Utils resource is started before any other resource that depends on it. Open your `server.cfg` file and add the following line:
+
+   ```lua
+   ensure Dank_Utils 
+   ```
  
-2. **Configure Dependencies**: Update the `fxmanifest.lua` file by **following the instructions** provided within the file. **Uncomment** lines for frameworks or scripts you are using (remove the `--` at the beginning of the line). **Comment out** lines for frameworks or libraries you are not using (add `--` at the start of the line) or keep them commented.
+3. **Configure Dependencies**: Update the `fxmanifest.lua` file by **following the instructions** provided within the file. **Uncomment** lines for frameworks or scripts you are using (remove the `--` at the beginning of the line). **Comment out** lines for frameworks or libraries you are not using (add `--` at the start of the line) or keep them commented.
 
 Here is an example illustrating how to configure your `fxmanifest.lua`:
 
@@ -96,6 +100,7 @@ lua54 'yes'
 use_experimental_fxv2_oal 'yes'
 
 ```
+4. Restart Your Server: After making these changes, restart your FiveM server to apply the configuration.
 
 ## Configuration
 
