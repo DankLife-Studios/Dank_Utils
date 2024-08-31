@@ -1,12 +1,7 @@
--- @module Inventory
---- @desc A module that provides a unified interface for different frameworks like qbx_core, qb-core, and es_extended.
 Framework = Framework or {}
 Framework.Status = Framework.Status or {}
 Framework.Inventory = Framework.Inventory or {}
 
-
---- Opens a stash using the qb-inventory system.
---- @param stashName string The name or identifier of the stash to open.
 Framework.Inventory.OpenStash = function(stashName)
     if SharedConfig.Inventory == 'qb-inventory' then
         local data = { label = stashName, maxweight = SharedConfig.InventorySpace.maxweight, slots = SharedConfig.InventorySpace.slots }
@@ -33,7 +28,6 @@ Framework.Inventory.OpenStash = function(stashName)
         })
     end
 end
-
 
 if not SharedConfig.Inventory == 'none' then
     Framework.Status.Inventory = SharedConfig.Inventory

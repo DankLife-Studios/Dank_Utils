@@ -1,10 +1,10 @@
 fx_version 'cerulean'
 game 'gta5'
 
-name 'Doii_Utils'
+name 'Dank_Utils'
 author 'Dankbudbaker'
-description 'Dank_Utils Framework & Script Compatibility'
-script_version '0.4.0'
+description 'A Framework & Script Compatibility For DankLife Scripts'
+script_version '0.4.1'
 
 -- **INSTRUCTIONS:**
 -- If you DO NOT use the framework or library mentioned, add or keep `--` at the start of the line to disable it.
