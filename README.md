@@ -62,28 +62,39 @@ Here is an example illustrating how to configure your `fxmanifest.lua`:
 fx_version 'cerulean'
 game 'gta5'
 
-name 'Doii_Utils'
+name 'Dank_Utils'
 author 'Dankbudbaker'
-description 'Dank_Utils Framework & Script Compatibility'
-version '1.0.0'
+description 'A Framework & Script Compatibility For DankLife Scripts'
+script_version '0.4.1'
 
 -- **INSTRUCTIONS:**
 -- If you DO NOT use the framework or library mentioned, add or keep `--` at the start of the line to disable it.
 -- If you USE the framework, ensure there is no `--` at the beginning of the line.
 
+shared_scripts {
+    '@ox_lib/init.lua', -- DISABLE THIS LINE IF YOU DON'T USE OX_LIB (Keep or add --)
+    '@qbx_core/modules/lib.lua', -- DISABLE THIS LINE IF YOU DON'T USE qbx_core (Keep or add --)
+    'config/shared.lua',
+    'shared/exports.lua'
+}
+
 client_scripts {
-    '@qbx_core/modules/playerdata.lua', -- DISABLE THIS LINE IF YOU DON'T USE QBX-CORE (Keep or add --)
-    'client/*.lua',
+    '@qbx_core/modules/playerdata.lua', -- DISABLE THIS LINE IF YOU DON'T USE qbx_core (Keep or add --)
+    'config/shared.lua',
+    'client/framework.lua',
+    'client/inventory.lua',
+    'client/banking.lua',
+    'client/target.lua'
 }
 
 server_scripts {
-    'server/*.lua',
-}
-
-shared_scripts {
-    '@ox_lib/init.lua', -- DISABLE THIS LINE IF YOU DON'T USE OX_LIB (Keep or add --)
-    '@qbx_core/modules/lib.lua', -- DISABLE THIS LINE IF YOU DON'T USE QBX-CORE (Keep or add --)
-    'shared/exports.lua',
+    '@oxmysql/lib/MySQL.lua',
+    'config/shared.lua',
+    'server/framework.lua',
+    'server/inventory.lua',
+    'server/banking.lua',
+    'server/target.lua',
+    'server/version.lua'
 }
 
 escrow_ignore {
@@ -92,13 +103,8 @@ escrow_ignore {
     'server/**'
 }
 
-files {
-   'config/shared.lua',
-}
-
 lua54 'yes'
 use_experimental_fxv2_oal 'yes'
-
 ```
 4. Restart Your Server: After making these changes, restart your FiveM server to apply the configuration.
 
