@@ -1,16 +1,42 @@
---- @module Framework
+-- @module Framework
 --- @desc A module that provides a unified interface for different frameworks like qbx_core, qb-core, and es_extended.
-local sharedConfig = require 'config.shared'
 Framework = Framework or {}
-Framework.Status = {}
+Framework.Status = Framework.Status or {}
+Framework.Commands = Framework.Commands or {}
 
-if sharedConfig.Framework == 'qbx_core' then
+local pendingCallbacks = {}
+
+-- Framework function to trigger a server callback
+Framework.TriggerServerCallback = function(name, cb, ...)
+    local requestId = "CB_" .. math.random(100000, 999999)
+    pendingCallbacks[requestId] = cb
+    TriggerServerEvent('Dank_Utils:ClientRequest', name, requestId, ...)
+end
+
+-- Event to handle server responses
+RegisterNetEvent('Dank_Utils:ClientResponse')
+AddEventHandler('Dank_Utils:ClientResponse', function(requestId, ...)
+    local cb = pendingCallbacks[requestId]
+    if cb then
+        cb(...)
+        pendingCallbacks[requestId] = nil
+    end
+end)
+
+if SharedConfig.Framework == 'qbx_core' then
     local ox_inventory = exports.ox_inventory
 
     --- Retrieves the player data from the QBX core.
     --- @return table PlayerData The player data table.
-    Framework.PlayerData = function()
+    Framework.GetPlayerData = function()
         return QBX.PlayerData
+    end
+
+    --- Retrieves the player data from the QBX core.
+    --- @param citizenid string The citizen ID of the player.
+    --- @return table PlayerData The player data table, or nil if not found.
+    Framework.GetPlayerByCitizenId = function(citizenid)
+        return exports.qbx_core:GetPlayerByCitizenId(citizenid)
     end
 
     --- Notify function to display notifications to the player.
@@ -95,25 +121,24 @@ if sharedConfig.Framework == 'qbx_core' then
         end
     end
 
-    --- Trigger a callback with qbx_core.
-    --- @param callbackName string The name of the callback to trigger.
-    --- @param cb function The callback function to handle the response.
-    Framework.TriggerCallback = function(callbackName, cb)
-        exports.qbx_core:TriggerCallback(callbackName, function(data)
-            cb(data)
-        end)
-    end
+    Framework.Status.Framework = SharedConfig.Framework
+    Framework.Status.Commands = SharedConfig.Framework
 
-    Framework.Status.Framework = sharedConfig.Framework
-
-elseif sharedConfig.Framework == 'qb-core' then
+elseif SharedConfig.Framework == 'qb-core' then
     -- Initialize QBCore framework
     local QBCore = exports['qb-core']:GetCoreObject()
 
     --- Retrieves the player data from the QBCore core.
     --- @return table PlayerData The player data table.
-    Framework.PlayerData = function()
+    Framework.GetPlayerData = function()
         return QBCore.Functions.GetPlayerData()
+    end
+
+    --- Retrieves the player data from the QBX core.
+    --- @param citizenid string The citizen ID of the player.
+    --- @return table PlayerData The player data table, or nil if not found.
+    Framework.GetPlayerByCitizenId = function(citizenid)
+        return QBCore.Functions.GetPlayerByCitizenId(citizenid)
     end
 
     --- Notify function to display notifications to the player.
@@ -169,22 +194,31 @@ elseif sharedConfig.Framework == 'qb-core' then
         }, animation, prop, propTwo, onFinish, onCancel)
     end
 
-    --- Triggers a callback in QBCore.
-    --- @param callbackName string The name of the callback to trigger.
-    --- @param cb function The callback function to execute with the result.
-    Framework.TriggerCallback = function(callbackName, cb)
-        QBCore.Functions.TriggerCallback(callbackName, cb)
-    end
+    Framework.Status.Framework = SharedConfig.Framework
+    Framework.Status.Commands = SharedConfig.Framework
 
-    Framework.Status.Framework = sharedConfig.Framework
-
-elseif sharedConfig.Framework == 'es_extended' then
+elseif SharedConfig.Framework == 'es_extended' then
     local ESX = exports['es_extended']:getSharedObject()
 
     --- Retrieves the player data from the ESX core.
     --- @return table PlayerData The player data table.
-    Framework.PlayerData = function()
+    Framework.GetPlayerData = function()
         return ESX.GetPlayerData()
+    end
+
+    --- Retrieves the player data from ESX by their citizen ID.
+    --- @param citizenid string The citizen ID of the player.
+    --- @return table|nil PlayerData The player data table, or nil if not found.
+    Framework.GetPlayerByCitizenId = function(citizenid)
+        local identifier = "license:" .. citizenid -- Adjust if ESX uses a different identifier scheme
+        local player = ESX.GetPlayerFromIdentifier(identifier)
+
+        -- Check if player is found and return their data
+        if player then
+            return player.get('playerData') -- or the appropriate method to get player data
+        else
+            return nil
+        end
     end
 
     --- Notify function to display notifications to the player.
@@ -249,93 +283,11 @@ elseif sharedConfig.Framework == 'es_extended' then
         })
     end
 
-    --- Triggers a callback in ESX.
-    --- @param callbackName string The name of the callback to trigger.
-    --- @param cb function The callback function to execute with the result.
-    Framework.TriggerCallback = function(callbackName, cb)
-        ESX.TriggerServerCallback(callbackName, cb)
-    end
-
-    Framework.Status.Framework = sharedConfig.Framework
+    Framework.Status.Framework = SharedConfig.Framework
+    Framework.Status.Commands = SharedConfig.Framework
 
 else
-    error("Unsupported framework: " .. (sharedConfig.Framework or "nil"))
-end
-
-Framework.Inventory = {}
-
-if sharedConfig.Banking == 'qb-management' or sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' or sharedConfig.Banking == 'Renewed-Banking' then
-    Framework.Status.Banking = sharedConfig.Banking
-end
-
-Framework.Inventory = {}
-
-if sharedConfig.Inventory == 'qb-inventory' then
-
-    --- Opens a stash using the qb-inventory system.
-    --- @param stashName string The name or identifier of the stash to open.
-    Framework.Inventory.OpenStash = function(stashName)
-        local data = { label = stashName, maxweight = sharedConfig.InventorySpace.maxweight, slots = sharedConfig.InventorySpace.slots }
-        exports['qb-inventory']:OpenInventory(source, stashName, data)
-    end
-
-    Framework.Status.Inventory = sharedConfig.Inventory
-
-elseif sharedConfig.Inventory == 'ps-inventory' then
-
-    --- Opens a stash using the ps-inventory system.
-    --- @param stashName string The name or identifier of the stash to open.
-    Framework.Inventory.OpenStash = function(stashName)
-        TriggerEvent('ps-inventory:client:SetCurrentStash', stashName)
-        TriggerServerEvent('ps-inventory:server:OpenInventory', 'stash', stashName, {
-            maxweight = sharedConfig.InventorySpace.maxweight,
-            slots = sharedConfig.InventorySpace.slots,
-        })
-    end
-
-    Framework.Status.Inventory = sharedConfig.Inventory
-
-elseif sharedConfig.Inventory == 'ox_inventory' then
-    local ox_inventory = exports.ox_inventory
-
-    --- Opens a stash using the ox_inventory system.
-    --- @param stashName string The identifier for the stash to be opened.
-    Framework.Inventory.OpenStash = function(stashName)
-        ox_inventory:openInventory('stash', { id = stashName })
-    end
-
-    Framework.Status.Inventory = sharedConfig.Inventory
-
-elseif sharedConfig.Inventory == 'qs-inventory' or sharedConfig.Inventory == 'qb-old-inventory' then
-    --- Opens a stash for either qs-inventory or qb-old-inventory systems.
-    --- @param stashName string The name of the stash to open.
-    Framework.Inventory.OpenStash = function(stashName)
-        local other = {}
-        other.maxweight = sharedConfig.InventorySpace.maxweight
-        other.slots = sharedConfig.InventorySpace.slots
-        TriggerServerEvent("inventory:server:OpenInventory", "stash", stashName, other)
-        TriggerEvent("inventory:client:SetCurrentStash", stashName)
-    end
-
-    Framework.Status.Inventory = sharedConfig.Inventory
-
-elseif sharedConfig.Inventory == 'esx_inventory' or sharedConfig.Inventory == 'es_extended' then
-    local ESX = exports['es_extended']:getSharedObject()
-
-    --- Opens a stash using the ESX inventory system.
-    --- @param stashName string The name or identifier of the stash to be opened.
-    Framework.Inventory.OpenStash = function(stashName)
-        -- Trigger an event or server call specific to ESX inventory handling
-        TriggerServerEvent('esx_inventory:server:OpenStash', stashName, {
-            maxweight = sharedConfig.InventorySpace.maxweight,
-            slots = sharedConfig.InventorySpace.slots
-        })
-    end
-
-    Framework.Status.Inventory = sharedConfig.Inventory
-
-else
-    error("Unsupported inventory system: " .. (sharedConfig.Inventory or "nil"))
+    error("Unsupported framework: " .. (SharedConfig.Framework or "nil"))
 end
 
 return Framework

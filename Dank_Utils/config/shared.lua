@@ -1,10 +1,12 @@
+SharedConfig = SharedConfig or {}
+
 --- Retrieves the name of the currently active resource from a list.
 --- @param resourceNames table A table of resource names to check.
 --- Each entry in the table is a string representing a resource name.
 --- @return string resourceName The name of the first resource that is 'started', or 'none' if no resource is found.
 local function getActiveResource(resourceNames)
     for _, resourceName in ipairs(resourceNames) do
-        if GetResourceState(resourceName) == 'started' then
+        if GetResourceState(resourceName) == 'starting' or GetResourceState(resourceName) == 'started' then
             return resourceName
         end
     end
@@ -12,68 +14,26 @@ local function getActiveResource(resourceNames)
 end
 
 -- Manual selection (edit this to choose your preferred script if auto-detection is not needed)
--- @type table
--- @field Framework string Set to 'AutoDetect' or specific framework names ('qbx_core', 'qb-core', 'es_extended').
--- @field Inventory string Set to 'AutoDetect' or specific inventory system names ('ox_inventory', 'qb-old-inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory').
--- @field Banking string Set to 'AutoDetect' or specific banking system names ('Renewed-Banking', 'qb-management', 'okokBanking', 'qb-banking', 'esx_jobbank').
 local manualSelection = {
-    Framework = 'AutoDetect',
-    Inventory = 'AutoDetect',
-    Banking = 'AutoDetect'
+    Framework = 'AutoDetect', --- Set to 'AutoDetect' for automatic detection, or specify a framework ('qbx_core', 'qb-core', 'es_extended'). Note: 'es_extended' NEEDS TESTING
+    Inventory = 'AutoDetect', --- Set to 'AutoDetect' for automatic detection, or specify an inventory system ('ox_inventory', 'qb-old-inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory').
+    Banking = 'AutoDetect', --- Set to 'AutoDetect' for automatic detection, or specify a banking system ('Renewed-Banking', 'qb-management', 'okokBanking', 'qb-banking', 'esx_jobbank').
+    Target = 'AutoDetect', --- Set to 'AutoDetect' for automatic detection, or specify a target system ('ox_target', 'qb-target').
 }
 
--- Automatic detection
--- @type table
--- @field detectedFramework string The detected framework from the list or 'none'.
--- @field detectedInventory string The detected inventory system from the list or 'none'.
--- @field detectedBanking string The detected banking system from the list or 'none'.
-local detectedFramework = getActiveResource({'qbx_core', 'qb-core', 'es_extended'})
+--- Automatically detects the framework, inventory, banking, target, and phone systems with retry logic.
+--- @return table detectedConfig A table containing detected values for Framework, Inventory, Banking, Target, and Phone.
+local detectedFramework = getActiveResource({'qbx_core', 'qb-core', 'es_extended'}) -- Note: 'es_extended' NEEDS TESTING
 local detectedInventory = getActiveResource({'ox_inventory', 'qb-old-inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory'})
 local detectedBanking = getActiveResource({'Renewed-Banking', 'qb-management', 'okokBanking', 'qb-banking', 'esx_jobbank'})
+local detectedTarget = getActiveResource({'ox_target', 'qb-target'})
 
--- Determine the final selection
--- @type table
--- @field Framework string The final selected framework.
--- @field Inventory string The final selected inventory system.
--- @field Banking string The final selected banking system.
-local finalSelection = {
+-- Determine the final selection between manual and automatic detection results.
+SharedConfig = {
     Framework = (manualSelection.Framework == 'AutoDetect') and detectedFramework or manualSelection.Framework,
     Inventory = (manualSelection.Inventory == 'AutoDetect') and detectedInventory or manualSelection.Inventory,
-    Banking = (manualSelection.Banking == 'AutoDetect') and detectedBanking or manualSelection.Banking
+    Banking = (manualSelection.Banking == 'AutoDetect') and detectedBanking or manualSelection.Banking,
+    Target = (manualSelection.Target == 'AutoDetect') and detectedTarget or manualSelection.Target,
 }
 
--- Print status messages
-CreateThread(function()
-    Wait(500) -- Delay to ensure all components are properly initialized
-
-    local missingComponents = {}
-
-    -- Check for missing framework
-    if finalSelection.Framework == 'none' and manualSelection.Framework == 'AutoDetect' then
-        table.insert(missingComponents, 'frameworks')
-    end
-
-    -- Check for missing inventory system
-    if finalSelection.Inventory == 'none' and manualSelection.Inventory == 'AutoDetect' then
-        table.insert(missingComponents, 'inventory systems')
-    end
-
-    -- Check for missing banking system
-    if finalSelection.Banking == 'none' and manualSelection.Banking == 'AutoDetect' then
-        table.insert(missingComponents, 'banking systems')
-    end
-
-    --- Print a professional message if any components are missing
-    if #missingComponents > 0 then
-        local componentList = table.concat(missingComponents, '\n') -- Use newline for each component
-        local message = string.format(
-            "^2[^6DankLife Gaming ^2- ^0%s^2] ^1The following supported components are missing:^0\n" ..
-            "^1%s^0\n" ..
-            "^1Please submit a pull request with the necessary support or open a ticket on our Discord server, and we will work to add the support promptly.^0",
-            GetCurrentResourceName(), componentList
-        )
-        print(message)
-    end
-end)
-
-return finalSelection
+return SharedConfig
