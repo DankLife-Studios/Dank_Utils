@@ -4,16 +4,15 @@ game 'gta5'
 name 'Dank_Utils'
 author 'Dankbudbaker'
 description 'A Framework & Script Compatibility For DankLife Scripts'
-script_version '0.4.1'
+script_version '0.4.3'
 
 -- **INSTRUCTIONS:**
 -- If you DO NOT use the framework or library mentioned, add or keep `--` at the start of the line to disable it.
 -- If you USE the framework, ensure there is no `--` at the beginning of the line.
 
 shared_scripts {
-    '@ox_lib/init.lua', -- DISABLE THIS LINE IF YOU DON'T USE OX_LIB (Keep or add --)
+    '@ox_lib/init.lua',
     '@qbx_core/modules/lib.lua', -- DISABLE THIS LINE IF YOU DON'T USE qbx_core (Keep or add --)
-    'config/shared.lua',
     'shared/exports.lua'
 }
 
@@ -23,7 +22,8 @@ client_scripts {
     'client/framework.lua',
     'client/inventory.lua',
     'client/banking.lua',
-    'client/target.lua'
+    'client/target.lua',
+    'client/menu.lua'
 }
 
 server_scripts {

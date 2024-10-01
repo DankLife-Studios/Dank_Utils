@@ -2,25 +2,6 @@ Framework = Framework or {}
 Framework.Status = Framework.Status or {}
 Framework.Commands = Framework.Commands or {}
 
-local pendingCallbacks = {}
-
-Framework.TriggerServerCallback = function(name, cb, ...)
-    local requestId = "CB_" .. math.random(100000, 999999)
-    pendingCallbacks[requestId] = cb
-    TriggerServerEvent('Dank_Utils:ClientRequest', name, requestId, ...)
-end
-
-RegisterNetEvent('Dank_Utils:ClientResponse')
-AddEventHandler('Dank_Utils:ClientResponse', function(requestId, ...)
-    local cb = pendingCallbacks[requestId]
-    if cb then
-        cb(...)
-        pendingCallbacks[requestId] = nil
-    end
-end)
-
-local ox_inventory = exports.ox_inventory
-
 Framework.GetPlayerData = function()
     if SharedConfig.Framework == 'qbx_core' then
         return QBX.PlayerData
@@ -33,19 +14,7 @@ Framework.GetPlayerData = function()
     end
 end
 
-Framework.GetPlayerByCitizenId = function(citizenid)
-    if SharedConfig.Framework == 'qbx_core' then
-        return exports.qbx_core:GetPlayerByCitizenId(citizenid)
-    elseif SharedConfig.Framework == 'qb-core' then
-        local QBCore = exports['qb-core']:GetCoreObject()
-        return QBCore.Functions.GetPlayerByCitizenId(citizenid)
-    elseif SharedConfig.Framework == 'es_extended' then
-        local ESX = exports['es_extended']:getSharedObject()
-        return ESX.GetPlayerFromIdentifier(citizenid)
-    end
-end
-
-Framework.ServerNotify = function(message, type)
+Framework.ClientNotify = function(message, type)
     if SharedConfig.Framework == 'qbx_core' then
         exports.qbx_core:Notify(message, type)
     elseif SharedConfig.Framework == 'qb-core' then
@@ -59,13 +28,9 @@ end
 Framework.GetItemLabel = function(itemName)
     if SharedConfig.Framework == 'qbx_core' then
         local itemNames = {}
-
-        -- Retrieve all items and their labels from ox_inventory
-        for item, data in pairs(ox_inventory:Items()) do
+        for item, data in pairs(exports.ox_inventory:Items()) do
             itemNames[item] = data.label
         end
-
-        -- Check if the item exists and has a label
         if itemNames[itemName] then
             return itemNames[itemName]
         else
@@ -100,9 +65,9 @@ Framework.ToggleDuty = function()
     end
 end
 
-Framework.ServerHasItem = function(item, amount)
+Framework.ClientHasItem = function(item, amount)
     if SharedConfig.Framework == 'qbx_core' then
-        local count = ox_inventory:Search('count', item)
+        local count = exports.ox_inventory:Search('count', item)
         return count >= amount
     elseif SharedConfig.Framework == 'qb-core' then
         local QBCore = exports['qb-core']:GetCoreObject()
@@ -169,7 +134,16 @@ Framework.Progressbar = function(name, label, duration, useWhileDead, canCancel,
     end
 end
 
-if not SharedConfig.Framework == 'none' then
+Framework.GetCarName = function(vehicle)
+    if SharedConfig.Framework == 'qbx_core' then
+        return qbx.getVehicleDisplayName(vehicle)
+    elseif SharedConfig.Framework == 'qb-core' then
+        local QBCore = exports['qb-core']:GetCoreObject()
+        return QBCore.Shared.Vehicles[vehicle].name
+    end
+end
+
+if SharedConfig.Framework then
     Framework.Status.Commands = SharedConfig.Framework
     Framework.Status.Framework = SharedConfig.Framework
 end

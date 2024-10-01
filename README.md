@@ -106,7 +106,13 @@ escrow_ignore {
 lua54 'yes'
 use_experimental_fxv2_oal 'yes'
 ```
-4. Restart Your Server: After making these changes, restart your FiveM server to apply the configuration.
+4. Add This to access the Framework
+
+```Lua
+local Framework = exports['Dank_Utils'].Framework()
+```
+
+5. Restart Your Server: After making these changes, restart your FiveM server to apply the configuration.
 
 ## Configuration
 

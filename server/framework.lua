@@ -2,23 +2,6 @@ Framework = Framework or {}
 Framework.Status = Framework.Status or {}
 Framework.Commands = Framework.Commands or {}
 
-local callbacks = {}
-
-Framework.CreateCallback = function(name, cb)
-    callbacks[name] = cb
-end
-
-RegisterServerEvent('Dank_Utils:ClientRequest')
-AddEventHandler('Dank_Utils:ClientRequest', function(name, requestId, ...)
-    local src = source
-    if callbacks[name] then
-        local result = callbacks[name](src, ...)
-        TriggerClientEvent('Dank_Utils:ClientResponse', src, requestId, result)
-    else
-        TriggerClientEvent('Dank_Utils:ClientResponse', src, requestId, nil, "Unknown callback")
-    end
-end)
-
 Framework.GetPlayer = function(source)
     if SharedConfig.Framework == 'qbx_core' then
         return exports.qbx_core:GetPlayer(source)
@@ -40,6 +23,18 @@ Framework.GetAllPlayers = function()
     elseif SharedConfig.Framework == 'es_extended' then
         local ESX = exports['es_extended']:getSharedObject()
         return ESX.GetPlayers()
+    end
+end
+
+Framework.GetPlayerByCitizenId = function(citizenid)
+    if SharedConfig.Framework == 'qbx_core' then
+        return exports.qbx_core:GetPlayerByCitizenId(citizenid)
+    elseif SharedConfig.Framework == 'qb-core' then
+        local QBCore = exports['qb-core']:GetCoreObject(citizenid)
+        return QBCore.Functions.GetPlayerByCitizenId(citizenid)
+    elseif SharedConfig.Framework == 'es_extended' then
+        local ESX = exports['es_extended']:getSharedObject()
+        return ESX.GetPlayerFromId(source)
     end
 end
 
@@ -99,7 +94,7 @@ Framework.RemoveMoney = function(source, moneyType, payment, message)
     end
 end
 
-Framework.ClientNotify = function(source, message, messageType)
+Framework.ServerNotify = function(source, message, messageType)
     if SharedConfig.Framework == 'qbx_core' then
         exports.qbx_core:Notify(source, message, messageType)
     elseif SharedConfig.Framework == 'qb-core' then
@@ -109,7 +104,19 @@ Framework.ClientNotify = function(source, message, messageType)
     end
 end
 
-Framework.GetAllJobs = function()
+Framework.GetJob = function(jobname)
+    if SharedConfig.Framework == 'qbx_core' then
+        return exports.qbx_core:GetJob(jobname)
+    elseif SharedConfig.Framework == 'qb-core' then
+        local QBCore = exports['qb-core']:GetCoreObject()
+        return QBCore.Shared.Jobs[jobname]
+    elseif SharedConfig.Framework == 'es_extended' then
+        local ESX = exports['es_extended']:getSharedObject()
+        return ESX.Jobs
+    end
+end
+
+Framework.GetAllJob = function()
     if SharedConfig.Framework == 'qbx_core' then
         return exports.qbx_core:GetJobs()
     elseif SharedConfig.Framework == 'qb-core' then
@@ -201,7 +208,7 @@ Framework.Commands.Add = function(name, description, args, restricted, callback,
 end
 
 
-if not SharedConfig.Framework == 'none' then
+if SharedConfig.Framework then
     Framework.Status.Commands = SharedConfig.Framework
     Framework.Status.Framework = SharedConfig.Framework
 end

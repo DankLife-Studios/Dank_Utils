@@ -1,9 +1,7 @@
 local jsonURL = "https://raw.githubusercontent.com/DankLife-Studios/scripts_version/Live/scripts_version.json"
 
--- Function to get the version from the JSON file hosted on GitHub
 function GetVersionFromJSON(callback)
     local scriptName = GetCurrentResourceName()
-
     PerformHttpRequest(jsonURL, function(err, text, headers)
         if err == 200 and text then
             local jsonData = json.decode(text)
@@ -24,7 +22,6 @@ function GetVersionFromJSON(callback)
     end, "GET")
 end
 
--- Function to get the version from the fxmanifest.lua file
 function GetVersionFromManifest()
     local fxManifestPath = "fxmanifest.lua"
     local localFile = LoadResourceFile(GetCurrentResourceName(), fxManifestPath)
@@ -41,17 +38,24 @@ function GetVersionFromManifest()
     return nil
 end
 
--- Function to check for updates and log messages
 function CheckForUpdates()
-    Wait(5000)  -- Ensures this is the last thing displayed after everything starts
-
+    Wait(5000)
     local curVer = GetVersionFromManifest()
     if not curVer then return end
-
     GetVersionFromJSON(function(remoteVersion)
         if remoteVersion then
-            if remoteVersion == curVer then
+            local function versionToNumber(version)
+                local major, minor, patch = version:match("(%d+)%.(%d+)%.(%d+)")
+                return tonumber(major) * 10000 + tonumber(minor) * 100 + tonumber(patch)
+            end
+
+            local curVerNum = versionToNumber(curVer)
+            local remoteVerNum = versionToNumber(remoteVersion)
+
+            if remoteVerNum == curVerNum then
                 print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^2You are up to date. ^5Current Version: ^3" .. curVer .. "^0")
+            elseif remoteVerNum < curVerNum then
+                print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^2Holy Shit... How did you get this?. ^5Version: ^3" .. curVer .. "^0")
             else
                 print("^6--------------------------------------------------------------------------------------------------^0")
                 print("^2[^6DankLife Gaming ^2- ^0" .. GetCurrentResourceName() .. "^2] ^3A new version is available on Github.^0")
@@ -65,17 +69,11 @@ function CheckForUpdates()
     end)
 end
 
--- Create a thread to check the resource name and perform version check
 CreateThread(function()
     local currentResourceName = GetCurrentResourceName()
-
-    -- Check if the resource name is correct
     if currentResourceName ~= "Dank_Utils" then
         print("^1ERROR: Resource name is not Dank_Utils. Please ensure the resource name is Dank_Utils.^0")
         return
     end
-
-    -- Perform version check
     CheckForUpdates()
 end)
-

@@ -104,7 +104,7 @@ Framework.Target.RemoveZone = function(name)
     end
 end
 
-if not SharedConfig.Target == 'none' then
+if SharedConfig.Target then
     Framework.Status.Target = SharedConfig.Target
 end
 
