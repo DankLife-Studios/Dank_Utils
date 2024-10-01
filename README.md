@@ -27,22 +27,22 @@ Dank_Utils supports automatic detection and integration with the following syste
 
 - **Frameworks**:
   - QB-Core
-  - ESX
   - QBX-Core
+  - ESX -- NEEDS SOMEONE TO TEST THIS!!
 
 - **Inventory Systems**:
   - OxInventory
   - QB Inventory
   - PS Inventory
   - QS Inventory
-  - ESX Inventory
+  - ESX Inventory -- NEEDS SOMEONE TO TEST THIS!!
 
 - **Banking Systems**:
   - Renewed-Banking
   - QB Management
   - OKOKBanking
   - QB Banking
-  - ESX Jobbank
+  - ESX Jobbank -- NEEDS SOMEONE TO TEST THIS!!
 
 ## Installation
 
@@ -72,7 +72,7 @@ script_version '0.4.1'
 -- If you USE the framework, ensure there is no `--` at the beginning of the line.
 
 shared_scripts {
-    '@ox_lib/init.lua', -- DISABLE THIS LINE IF YOU DON'T USE OX_LIB (Keep or add --)
+    '@ox_lib/init.lua',
     '@qbx_core/modules/lib.lua', -- DISABLE THIS LINE IF YOU DON'T USE qbx_core (Keep or add --)
     'config/shared.lua',
     'shared/exports.lua'
