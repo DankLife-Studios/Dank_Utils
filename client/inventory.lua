@@ -29,6 +29,22 @@ Framework.Inventory.OpenStash = function(stashName, maxweight, slots)
     end
 end
 
+Framework.Inventory.GetImageUrl = function()
+    if SharedConfig.Inventory == 'qb-inventory' then
+        return 'https://cfx-nui-qb-inventory/html/images/'
+    elseif SharedConfig.Inventory == 'ps-inventory' then
+        return 'https://cfx-nui-ps-inventory/html/images/'
+    elseif SharedConfig.Inventory == 'ox_inventory' then
+        return 'https://cfx-nui-ox_inventory/web/images/'
+    elseif SharedConfig.Inventory == 'qs-inventory' then
+        return 'https://cfx-nui-qs-inventory/html/images/'
+    elseif SharedConfig.Inventory == 'qb-old-inventory' then
+        return 'https://cfx-nui-qb-inventory/html/images/'
+    elseif SharedConfig.Inventory == 'esx_inventory' then
+        return '' -- Needs a esx user to test and help complete this
+    end
+end
+
 if SharedConfig.Inventory then
     Framework.Status.Inventory = SharedConfig.Inventory
 end
