@@ -2,6 +2,14 @@
 
 Dank_Utils is a versatile framework and utility script designed for FiveM, providing enhanced compatibility and functionality with various frameworks and systems. It includes automatic detection for supported frameworks, inventory systems, and banking systems.
 
+## Dependencies
+
+Dank_Utils requires the following dependency:
+
+- **ox_lib**: This library is essential for Dank_Utils to function properly. You can find it at [https://github.com/overextended/ox_lib](https://github.com/overextended/ox_lib)
+
+Make sure to install and configure ox_lib before using Dank_Utils.
+
 ## Table of Contents
 - [Features](#features)
 - [Supported Systems](#supported-systems)
