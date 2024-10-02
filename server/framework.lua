@@ -158,7 +158,7 @@ Framework.CreateUseableItem = function(item, callback)
     end
 end
 
-Framework.ClientHasItem = function(source, item, amount)
+Framework.ServerHasItem = function(source, item, amount)
     if SharedConfig.Framework == 'qbx_core' then
         local inventory = exports.ox_inventory:GetInventory(source)
         if inventory and inventory[item] and inventory[item].count >= amount then
@@ -207,6 +207,14 @@ Framework.Commands.Add = function(name, description, args, restricted, callback,
     end
 end
 
+Framework.ServerFunctions = function()
+    if SharedConfig.Framework == 'qbx_core' then
+        return exports.qbx_core -- Return the qbx_core export
+    elseif SharedConfig.Framework == 'qb-core' then
+        local QBCore = exports['qb-core']:GetCoreObject()
+        return QBCore.Functions -- Use QBCore.Functions for qb-core
+    end
+end
 
 if SharedConfig.Framework then
     Framework.Status.Commands = SharedConfig.Framework

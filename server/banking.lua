@@ -9,6 +9,8 @@ Framework.Banking.GetAccountBalance = function(account)
         return exports[SharedConfig.Banking]:getAccountMoney(account)
     elseif SharedConfig.Banking == 'esx_jobbank' then
         return exports[SharedConfig.Banking]:getJobAccountBalance(account)
+    else
+        return 0
     end
 end
 

@@ -11,7 +11,7 @@ script_version '0.4.4'
 -- If you USE the framework, ensure there is no `--` at the beginning of the line.
 
 shared_scripts {
-    '@ox_lib/init.lua', -- DISABLE THIS LINE IF YOU DON'T USE OX_LIB (Keep or add --)
+    '@ox_lib/init.lua',
     '@qbx_core/modules/lib.lua', -- DISABLE THIS LINE IF YOU DON'T USE qbx_core (Keep or add --)
     'shared/exports.lua'
 }

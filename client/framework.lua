@@ -152,6 +152,15 @@ Framework.GetCarData = function(vehicle)
     return 'please let me know how to do this in esx'
 end
 
+Framework.ClientFunctions = function()
+    if SharedConfig.Framework == 'qbx_core' then
+        return exports.qbx_core -- Return the qbx_core export
+    elseif SharedConfig.Framework == 'qb-core' then
+        local QBCore = exports['qb-core']:GetCoreObject()
+        return QBCore.Functions -- Use QBCore.Functions for qb-core
+    end
+end
+
 if SharedConfig.Framework then
     Framework.Status.Commands = SharedConfig.Framework
     Framework.Status.Framework = SharedConfig.Framework
