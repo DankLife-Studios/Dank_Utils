@@ -166,7 +166,7 @@ Framework.SharedItems = function(item)
         return exports.ox_inventory:Items()[item]
     elseif SharedConfig.Framework == 'qb-core' then
         local QBCore = exports['qb-core']:GetCoreObject()
-        return Framework.Shared.Items[item]
+        return QBCore.Shared.Items[item]
     end
 end
 
