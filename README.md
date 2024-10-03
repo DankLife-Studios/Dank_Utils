@@ -62,7 +62,7 @@ Dank_Utils supports automatic detection and integration with the following syste
   ensure Dank_Utils 
   ```
 
-3. **IF YOU USE QBCORE - You can add this to your `server.cfg` file, if you want to force the use of Qb-menu instead of Ox_lib menu.
+3. **IF YOU USE QBCORE** - You can add this to your `server.cfg` file, if you want to force the use of Qb-menu instead of Ox_lib menu.
 
   ```lua
   # QBCore UseTarget
