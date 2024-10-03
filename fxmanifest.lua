@@ -4,7 +4,7 @@ game 'gta5'
 name 'Dank_Utils'
 author 'Dankbudbaker'
 description 'A Framework & Script Compatibility For DankLife Scripts'
-script_version '0.4.4'
+script_version '0.4.5'
 
 -- **INSTRUCTIONS:**
 -- If you DO NOT use the framework or library mentioned, add or keep `--` at the start of the line to disable it.
