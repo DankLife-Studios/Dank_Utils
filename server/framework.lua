@@ -216,6 +216,15 @@ Framework.ServerFunctions = function()
     end
 end
 
+Framework.SharedItems = function(item)
+    if SharedConfig.Framework == 'qbx_core' then
+        return exports.ox_inventory:Items()[item]
+    elseif SharedConfig.Framework == 'qb-core' then
+        local QBCore = exports['qb-core']:GetCoreObject()
+        return QBCore.Shared.Items[item]
+    end
+end
+
 if SharedConfig.Framework then
     Framework.Status.Commands = SharedConfig.Framework
     Framework.Status.Framework = SharedConfig.Framework
