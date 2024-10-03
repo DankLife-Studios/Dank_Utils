@@ -58,11 +58,18 @@ Dank_Utils supports automatic detection and integration with the following syste
 
 2. **Update `server.cfg`**: Ensure the Dank_Utils resource is started before any other resource that depends on it. Open your `server.cfg` file and add the following line:
 
-   ```lua
-   ensure Dank_Utils 
-   ```
- 
-3. **Configure Dependencies**: Update the `fxmanifest.lua` file by **following the instructions** provided within the file. **Uncomment** lines for frameworks or scripts you are using (remove the `--` at the beginning of the line). **Comment out** lines for frameworks or libraries you are not using (add `--` at the start of the line) or keep them commented.
+  ```lua
+  ensure Dank_Utils 
+  ```
+
+3. **IF YOU USE QBCORE - You can add this to your `server.cfg` file, if you want to force the use of Qb-menu instead of Ox_lib menu.
+
+  ```lua
+  # QBCore UseTarget
+  setr ForceUseQbMenu true
+  ```
+
+4. **Configure Dependencies**: Update the `fxmanifest.lua` file by **following the instructions** provided within the file. **Uncomment** lines for frameworks or scripts you are using (remove the `--` at the beginning of the line). **Comment out** lines for frameworks or libraries you are not using (add `--` at the start of the line) or keep them commented.
 
 Here is an example illustrating how to configure your `fxmanifest.lua`:
 
@@ -114,13 +121,13 @@ escrow_ignore {
 lua54 'yes'
 use_experimental_fxv2_oal 'yes'
 ```
-4. Add This to access the Framework
+5. Add This to access the Framework
 
 ```Lua
 local Framework = exports['Dank_Utils'].Framework()
 ```
 
-5. Restart Your Server: After making these changes, restart your FiveM server to apply the configuration.
+6. Restart Your Server: After making these changes, restart your FiveM server to apply the configuration.
 
 ## Configuration
 
