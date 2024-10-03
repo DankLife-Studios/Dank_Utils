@@ -4,7 +4,7 @@ Framework = Framework or {}
 Framework.Status = Framework.Status or {}
 Framework.Banking = Framework.Banking or {}
 
-if SharedConfig.Banking == 'qb-management' or SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' or SharedConfig.Banking == 'Renewed-Banking' then
+if SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' or SharedConfig.Banking == 'Renewed-Banking' then
     Framework.Status.Banking = SharedConfig.Banking
 end
 

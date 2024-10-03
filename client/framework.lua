@@ -138,18 +138,18 @@ Framework.GetCarData = function(vehicle)
     if SharedConfig.Framework == 'qbx_core' then
         local vehicleData = exports.qbx_core:GetVehiclesByName()[vehicle]
         if not vehicleData then
-            return 'You need to add the vehicles to your qbox core shared vehicles'
+            return print('You need to add the vehicles to your qbox core shared vehicles')
         end
         return vehicleData
     elseif SharedConfig.Framework == 'qb-core' then
         local QBCore = exports['qb-core']:GetCoreObject()
         local vehicleData = QBCore.Shared.Vehicles[vehicle]
         if not vehicleData then
-            return 'You need to add the vehicles to your qbcore core shared vehicles'
+            return print('You need to add the vehicles to your qbcore core shared vehicles')
         end
         return vehicleData
     end
-    return 'please let me know how to do this in esx'
+    return print('please let me know how to do this in esx')
 end
 
 Framework.ClientFunctions = function()

@@ -3,7 +3,7 @@ Framework.Status = Framework.Status or {}
 Framework.Banking = Framework.Banking or {}
 
 Framework.Banking.GetAccountBalance = function(account)
-    if SharedConfig.Banking == 'qb-management' or SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
+    if SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
         return exports[SharedConfig.Banking]:GetAccount(account)
     elseif SharedConfig.Banking == 'Renewed-Banking' then
         return exports[SharedConfig.Banking]:getAccountMoney(account)
@@ -15,7 +15,7 @@ Framework.Banking.GetAccountBalance = function(account)
 end
 
 Framework.Banking.GetAccount = function(account)
-    if SharedConfig.Banking == 'qb-management' or SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
+    if SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
         return exports[SharedConfig.Banking]:GetAccount(account)
     elseif SharedConfig.Banking == 'Renewed-Banking' then
         return exports[SharedConfig.Banking]:getAccountMoney(account)
@@ -25,7 +25,7 @@ Framework.Banking.GetAccount = function(account)
 end
 
 Framework.Banking.AddMoney = function(account, amount)
-    if SharedConfig.Banking == 'qb-management' or SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
+    if SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
         return exports[SharedConfig.Banking].AddMoney(account, amount)
     elseif SharedConfig.Banking == 'Renewed-Banking' then
         return exports[SharedConfig.Banking]:addAccountMoney(account, amount)
@@ -35,7 +35,7 @@ Framework.Banking.AddMoney = function(account, amount)
 end
 
 Framework.Banking.RemoveMoney = function(account, amount)
-    if SharedConfig.Banking == 'qb-management' or SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
+    if SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
         return exports[SharedConfig.Banking].RemoveMoney(account, amount)
     elseif SharedConfig.Banking == 'Renewed-Banking' then
         return exports[SharedConfig.Banking]:removeAccountMoney(account, amount)

@@ -12,14 +12,14 @@ end
 local manualSelection = {--- Set to 'AutoDetect' for automatic detection or
     Framework = 'AutoDetect', --- Manually specify a framework ('qbx_core', 'qb-core', 'es_extended'). -- Note: 'es_extended' NEEDS ALOT OF TESTING
     Inventory = 'AutoDetect', --- Manually specify an inventory system ('ox_inventory', 'qb-old-inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory').
-    Banking = 'AutoDetect', --- Manually specify a banking system ('Renewed-Banking', 'qb-management', 'okokBanking', 'qb-banking', 'esx_jobbank').
+    Banking = 'AutoDetect', --- Manually specify a banking system ('Renewed-Banking', 'okokBanking', 'qb-banking', 'esx_jobbank').
     Target = 'AutoDetect', --- Manually specify a target system ('ox_target', 'qb-target').
     Menu = 'AutoDetect', --- Manually specify a target system ('ox_lib', 'qb-menu').
 }
 
-local detectedFramework = getActiveResource({'qbx_core', 'qb-core', 'es_extended'}) -- Note: 'es_extended' NEEDS ALOT OF TESTING
+local detectedFramework = getActiveResource({'qbx_core', 'qb-core', 'es_extended'})
 local detectedInventory = getActiveResource({'ox_inventory', 'qb-old-inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory'})
-local detectedBanking = getActiveResource({'Renewed-Banking', 'qb-management', 'okokBanking', 'qb-banking', 'esx_jobbank'})
+local detectedBanking = getActiveResource({'Renewed-Banking', 'okokBanking', 'qb-banking', 'esx_jobbank'})
 local detectedTarget = getActiveResource({'ox_target', 'qb-target'})
 local detectedMenu = getActiveResource({'ox_lib', 'qb-menu'})
 
