@@ -41,7 +41,7 @@ end
 
 SharedConfig = {
     Framework = detectResource('Framework', {'qbx_core', 'qb-core', 'es_extended'}),
-    Inventory = detectResource('Inventory', {'ox_inventory', 'qb-old-inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory'}),
+    Inventory = detectResource('Inventory', {'ox_inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory'}),
     Banking = detectResource('Banking', {'Renewed-Banking', 'okokBanking', 'qb-banking', 'esx_jobbank'}),
     Target = detectResource('Target', {'ox_target', 'qb-target'}),
     Menu = manualConfig.ForceQbMenu and 'qb-menu' or detectResource('Menu', {'ox_lib', 'qb-menu'}),

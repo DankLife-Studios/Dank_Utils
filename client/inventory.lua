@@ -6,7 +6,7 @@ Framework.Inventory = Framework.Inventory or {}
 
 -- Opens a stash based on the selected inventory system
 Framework.Inventory.OpenStash = function(stashName, maxweight, slots)
-    if SharedConfig.Inventory == 'qb-inventory' or SharedConfig.Inventory == 'qb-old-inventory' then
+    if SharedConfig.Inventory == 'qb-inventory' then
         local data = { label = stashName, maxweight = maxweight, slots = slots }
         exports['qb-inventory']:OpenInventory(source, stashName, data)
     elseif SharedConfig.Inventory == 'ps-inventory' then
@@ -33,7 +33,7 @@ end
 
 -- Returns the image URL prefix for the selected inventory system
 Framework.Inventory.GetImageUrl = function()
-    if SharedConfig.Inventory == 'qb-inventory' or SharedConfig.Inventory == 'qb-old-inventory' then
+    if SharedConfig.Inventory == 'qb-inventory' then
         return 'https://cfx-nui-qb-inventory/html/images/'
     elseif SharedConfig.Inventory == 'ps-inventory' then
         return 'https://cfx-nui-ps-inventory/html/images/'
@@ -52,7 +52,6 @@ end
 -- Set inventory status if valid and active
 local validInventories = {
     ['ox_inventory'] = true,
-    ['qb-old-inventory'] = true,
     ['qb-inventory'] = true,
     ['ps-inventory'] = true,
     ['qs-inventory'] = true,

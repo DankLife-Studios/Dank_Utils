@@ -10,7 +10,7 @@ Framework.Inventory.RegisterStash = function(stashId, stashData)
         local stashSlots = stashData.slots or 50
         local stashWeight = stashData.weight or 100000
         exports.ox_inventory:RegisterStash(stashId, stashLabel, stashSlots, stashWeight, false)
-    elseif SharedConfig.Inventory == 'qb-inventory' or SharedConfig.Inventory == 'qb-old-inventory' then
+    elseif SharedConfig.Inventory == 'qb-inventory' then
         -- QB inventory typically registers stashes via SQL or client-side; no direct export available
         LogDebug('[Dank Utils] QB inventory stash registration may require custom implementation.')
     elseif SharedConfig.Inventory == 'esx_inventory' then
@@ -24,7 +24,6 @@ end
 -- Set inventory status if valid and active
 local validInventories = {
     ['ox_inventory'] = true,
-    ['qb-old-inventory'] = true,
     ['qb-inventory'] = true,
     ['ps-inventory'] = true,
     ['qs-inventory'] = true,
