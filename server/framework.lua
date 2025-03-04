@@ -219,6 +219,20 @@ Framework.SharedItems = function(item)
     end
 end
 
+Framework.SpawnVehicle = function(model, coords, heading, cb)
+    if sharedConfig.Framework == 'qbx_core' then
+        exports.qbx_core:SpawnVehicle(model, coords, heading, cb)
+    elseif sharedConfig.Framework == 'qb-core' then
+        local QBCore = exports['qb-core']:GetCoreObject()
+        QBCore.Functions.SpawnVehicle(model, function(vehicle)
+            cb(vehicle)
+        end, coords, heading)
+    elseif sharedConfig.Framework == 'es_extended' then
+        local ESX = exports['es_extended']:getSharedObject()
+        ESX.Game.SpawnVehicle(model, coords, heading, cb)
+    end
+end
+
 if sharedConfig.Framework ~= 'none' then
     Framework.Status.Commands = sharedConfig.Framework
     Framework.Status.Framework = sharedConfig.Framework

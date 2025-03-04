@@ -23,7 +23,7 @@ Framework.Banking.AddMoney = function(account, amount)
     if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' then
         return exports[sharedConfig.Banking]:AddMoney(account, amount)
     elseif sharedConfig.Banking == 'Renewed-Banking' then
-        return exports[sharedConfig.Banking]:addAccountMoney(account, amount)
+        return exports['Renewed-Banking']:addAccountMoney(account, amount)
     elseif sharedConfig.Banking == 'esx_jobbank' then
         return exports[sharedConfig.Banking]:addJobAccountMoney(account, amount)
     else
@@ -33,10 +33,12 @@ Framework.Banking.AddMoney = function(account, amount)
 end
 
 Framework.Banking.RemoveMoney = function(account, amount)
+    print('account:', account)
+    print('total_cost:', amount)
     if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' then
         return exports[sharedConfig.Banking]:RemoveMoney(account, amount)
     elseif sharedConfig.Banking == 'Renewed-Banking' then
-        return exports[sharedConfig.Banking]:removeAccountMoney(account, amount)
+        return exports['Renewed-Banking']:removeAccountMoney(account, amount)
     elseif sharedConfig.Banking == 'esx_jobbank' then
         return exports[sharedConfig.Banking]:removeJobAccountMoney(account, amount)
     else

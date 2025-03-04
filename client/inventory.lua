@@ -51,6 +51,49 @@ Framework.Inventory.GetImageUrl = function()
     end
 end
 
+-- Checks if the player has the required items in their inventory
+-- @param requiredItems table Table of required items with item names as keys and required quantities as values (e.g., {['apple'] = 2, ['water'] = 1})
+-- @return boolean, table Returns true if all items are present, false otherwise. If false, also returns a table of missing items with their missing amounts
+Framework.Inventory.HasItems = function(requiredItems)
+    local missingItems = {}
+    if Framework.Status.Inventory == 'qs-inventory' then
+        local items = exports['qs-inventory']:getUserInventory()
+        for item, requiredAmount in pairs(requiredItems) do
+            local found = false
+            for _, invItem in pairs(items) do
+                if invItem.name == item and invItem.amount >= requiredAmount then
+                    found = true
+                    break
+                end
+            end
+            if not found then
+                table.insert(missingItems, {item = item, missingAmount = requiredAmount})
+            end
+        end
+    elseif Framework.Status.Inventory == 'ps-inventory' or Framework.Status.Inventory == 'qb-inventory' or Framework.Status.Inventory == 'qb-old-inventory' then
+        for item, requiredAmount in pairs(requiredItems) do
+            if not Framework.HasItem(item, requiredAmount) then
+                table.insert(missingItems, {item = item, missingAmount = requiredAmount})
+            end
+        end
+    elseif Framework.Status.Inventory == 'ox_inventory' then
+        for item, requiredAmount in pairs(requiredItems) do
+            local count = exports.ox_inventory:Search('count', item)
+            if count < requiredAmount then
+                table.insert(missingItems, {item = item, missingAmount = requiredAmount - count})
+            end
+        end
+    else
+        LogDebug('[Dank Utils] Unsupported inventory for HasItems: ' .. tostring(Framework.Status.Inventory))
+        return false, {{item = 'unknown', missingAmount = 1}} -- Generic missing item for unsupported systems
+    end
+    if #missingItems == 0 then
+        return true, nil
+    else
+        return false, missingItems
+    end
+end
+
 -- Set inventory status if valid and active
 local validInventories = {
     ['ox_inventory'] = true,
@@ -59,6 +102,7 @@ local validInventories = {
     ['qs-inventory'] = true,
     ['esx_inventory'] = true
 }
+
 if sharedConfig.Inventory and validInventories[sharedConfig.Inventory] then
     local state = GetResourceState(sharedConfig.Inventory)
     if state == 'started' or state == 'starting' then
