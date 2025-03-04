@@ -4,8 +4,10 @@ Framework = Framework or {}
 Framework.Status = Framework.Status or {}
 Framework.Target = Framework.Target or {}
 
+local sharedConfig = require 'config.shared'
+
 Framework.Target.AddBoxZone = function(params)
-    if SharedConfig.Target == 'qb-target' then
+    if sharedConfig.Target == 'qb-target' then
         local options = params.options or {}
         exports['qb-target']:AddBoxZone(params.name, params.coords, params.size.x, params.size.y, {
             heading = params.heading,
@@ -19,13 +21,12 @@ Framework.Target.AddBoxZone = function(params)
                 label = options.label or "Interact",
                 action = options.action or options.onSelect,
                 canInteract = options.canInteract or nil,
-                job = options.job or nil,
-                gang = options.gang or nil
+                job = options.job or nil
             }},
             distance = options.distance or 2.5
         })
         return params.name
-    elseif SharedConfig.Target == 'ox_target' then
+    elseif sharedConfig.Target == 'ox_target' then
         local zoneId = exports.ox_target:addBoxZone({
             coords = vec3(params.coords.x, params.coords.y, params.coords.z),
             size = vec3(params.size.x, params.size.y, params.size.z),
@@ -37,18 +38,17 @@ Framework.Target.AddBoxZone = function(params)
                 distance = params.options.distance or 2.5,
                 onSelect = params.options.onSelect or params.options.action,
                 canInteract = params.options.canInteract,
-                job = params.options.job,
-                gang = params.options.gang
+                groups = params.options.job
             }}
         })
         return zoneId
     else
-        LogDebug('[Dank Utils] Unsupported target system for AddBoxZone: ' .. tostring(SharedConfig.Target))
+        LogDebug('[Dank Utils] Unsupported target system for AddBoxZone: ' .. tostring(sharedConfig.Target))
     end
 end
 
 Framework.Target.AddCircleZone = function(params)
-    if SharedConfig.Target == 'qb-target' then
+    if sharedConfig.Target == 'qb-target' then
         exports['qb-target']:AddCircleZone(params.name, params.coords, params.radius, {
             debugPoly = params.debugPoly or false,
         }, {
@@ -58,13 +58,12 @@ Framework.Target.AddCircleZone = function(params)
                 label = params.options.label or "Interact",
                 action = params.options.action or params.options.onSelect,
                 canInteract = params.options.canInteract or nil,
-                job = params.options.job or nil,
-                gang = params.options.gang or nil
+                job = params.options.job or nil
             }},
             distance = params.options.distance or 2.5
         })
         return params.name
-    elseif SharedConfig.Target == 'ox_target' then
+    elseif sharedConfig.Target == 'ox_target' then
         local zoneId = exports.ox_target:addSphereZone({
             coords = params.coords,
             radius = params.radius,
@@ -75,18 +74,17 @@ Framework.Target.AddCircleZone = function(params)
                 distance = params.options.distance or 2.5,
                 onSelect = params.options.onSelect or params.options.action,
                 canInteract = params.options.canInteract,
-                job = params.options.job,
-                gang = params.options.gang
+                groups = params.options.job
             }}
         })
         return zoneId
     else
-        LogDebug('[Dank Utils] Unsupported target system for AddCircleZone: ' .. tostring(SharedConfig.Target))
+        LogDebug('[Dank Utils] Unsupported target system for AddCircleZone: ' .. tostring(sharedConfig.Target))
     end
 end
 
 Framework.Target.AddTargetModel = function(model, options)
-    if SharedConfig.Target == 'qb-target' then
+    if sharedConfig.Target == 'qb-target' then
         exports['qb-target']:AddTargetEntity(model, {
             options = {{
                 type = "client",
@@ -97,7 +95,7 @@ Framework.Target.AddTargetModel = function(model, options)
             }},
             distance = options.distance or 3.0
         })
-    elseif SharedConfig.Target == 'ox_target' then
+    elseif sharedConfig.Target == 'ox_target' then
         exports.ox_target:addModel(model, {
             label = options.label or "Interact",
             icon = options.icon or "fa-regular fa-comments",
@@ -106,31 +104,31 @@ Framework.Target.AddTargetModel = function(model, options)
             canInteract = options.canInteract
         })
     else
-        LogDebug('[Dank Utils] Unsupported target system for AddTargetModel: ' .. tostring(SharedConfig.Target))
+        LogDebug('[Dank Utils] Unsupported target system for AddTargetModel: ' .. tostring(sharedConfig.Target))
     end
 end
 
 Framework.Target.RemoveZone = function(identifier)
-    if SharedConfig.Target == 'qb-target' then
+    if sharedConfig.Target == 'qb-target' then
         exports['qb-target']:RemoveZone(identifier)
-    elseif SharedConfig.Target == 'ox_target' then
+    elseif sharedConfig.Target == 'ox_target' then
         exports.ox_target:removeZone(identifier)
     else
-        LogDebug('[Dank Utils] Unsupported target system for RemoveZone: ' .. tostring(SharedConfig.Target))
+        LogDebug('[Dank Utils] Unsupported target system for RemoveZone: ' .. tostring(sharedConfig.Target))
     end
 end
 
 -- Set target status if valid and active
 local validTargets = { ['qb-target'] = true, ['ox_target'] = true }
-if SharedConfig.Target and validTargets[SharedConfig.Target] then
-    local state = GetResourceState(SharedConfig.Target)
+if sharedConfig.Target and validTargets[sharedConfig.Target] then
+    local state = GetResourceState(sharedConfig.Target)
     if state == 'started' or state == 'starting' then
-        Framework.Status.Target = SharedConfig.Target
+        Framework.Status.Target = sharedConfig.Target
     else
-        LogDebug('[Dank Utils] Target resource "' .. SharedConfig.Target .. '" is not active.')
+        LogDebug('[Dank Utils] Target resource "' .. sharedConfig.Target .. '" is not active.')
     end
-elseif SharedConfig.Target ~= 'AutoDetect' then
-    LogDebug('[Dank Utils] Unsupported Target option: ' .. tostring(SharedConfig.Target))
+elseif sharedConfig.Target ~= 'AutoDetect' then
+    LogDebug('[Dank Utils] Unsupported Target option: ' .. tostring(sharedConfig.Target))
 end
 
 return Framework

@@ -4,17 +4,19 @@ Framework = Framework or {}
 Framework.Status = Framework.Status or {}
 Framework.Target = Framework.Target or {}
 
+local sharedConfig = require 'config.shared'
+
 -- Valid target options
 local validTargets = { ['qb-target'] = true, ['ox_target'] = true }
-if SharedConfig.Target and validTargets[SharedConfig.Target] then
-    local state = GetResourceState(SharedConfig.Target)
+if sharedConfig.Target and validTargets[sharedConfig.Target] then
+    local state = GetResourceState(sharedConfig.Target)
     if state == 'started' or state == 'starting' then
-        Framework.Status.Target = SharedConfig.Target
+        Framework.Status.Target = sharedConfig.Target
     else
-        LogDebug('[Dank Utils] Target resource "' .. SharedConfig.Target .. '" is not active.')
+        LogDebug('[Dank Utils] Target resource "' .. sharedConfig.Target .. '" is not active.')
     end
-elseif SharedConfig.Target ~= 'AutoDetect' then
-    LogDebug('[Dank Utils] Unsupported Target option: ' .. tostring(SharedConfig.Target))
+elseif sharedConfig.Target ~= 'AutoDetect' then
+    LogDebug('[Dank Utils] Unsupported Target option: ' .. tostring(sharedConfig.Target))
 end
 
 return Framework

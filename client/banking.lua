@@ -4,8 +4,10 @@ Framework = Framework or {}
 Framework.Status = Framework.Status or {}
 Framework.Banking = Framework.Banking or {}
 
-if SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' or SharedConfig.Banking == 'Renewed-Banking' then
-    Framework.Status.Banking = SharedConfig.Banking
+local sharedConfig = require 'config.shared'
+
+if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' or sharedConfig.Banking == 'Renewed-Banking' then
+    Framework.Status.Banking = sharedConfig.Banking
 end
 
 return Framework

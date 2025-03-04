@@ -2,18 +2,20 @@ Framework = Framework or {}
 Framework.Status = Framework.Status or {}
 Framework.Commands = Framework.Commands or {}
 
+local sharedConfig = require 'config.shared'
+
 local function getCoreObject()
-    if SharedConfig.Framework == 'none' then return nil end
-    return exports[SharedConfig.Framework]:GetCoreObject()
+    if sharedConfig.Framework == 'none' then return nil end
+    return exports[sharedConfig.Framework]:GetCoreObject()
 end
 
 Framework.GetPlayerData = function()
-    if SharedConfig.Framework == 'qbx_core' then
+    if sharedConfig.Framework == 'qbx_core' then
         return QBX.PlayerData or {}
-    elseif SharedConfig.Framework == 'qb-core' then
+    elseif sharedConfig.Framework == 'qb-core' then
         local core = getCoreObject()
         return core and core.Functions.GetPlayerData() or {}
-    elseif SharedConfig.Framework == 'es_extended' then
+    elseif sharedConfig.Framework == 'es_extended' then
         local esx = exports['es_extended']:getSharedObject()
         return esx and esx.GetPlayerData() or {}
     end
@@ -24,12 +26,12 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 Framework.Notify = function(message, type, timeLength)
     local time = timeLength or 5000
-    if SharedConfig.Framework == 'qbx_core' then
+    if sharedConfig.Framework == 'qbx_core' then
         exports.qbx_core:Notify(message, type, time)
-    elseif SharedConfig.Framework == 'qb-core' then
+    elseif sharedConfig.Framework == 'qb-core' then
         local core = getCoreObject()
         if core then core.Functions.Notify(message, type, time) end
-    elseif SharedConfig.Framework == 'es_extended' then
+    elseif sharedConfig.Framework == 'es_extended' then
         TriggerEvent('esx:showNotification', message, type, time)
     else
         LogDebug('Notify: No framework detected, falling back to chat.')
@@ -38,13 +40,13 @@ Framework.Notify = function(message, type, timeLength)
 end
 
 Framework.GetItemLabel = function(itemName)
-    if SharedConfig.Framework == 'qbx_core' then
+    if sharedConfig.Framework == 'qbx_core' then
         local items = exports.ox_inventory:Items()
         return items[itemName] and items[itemName].label or itemName
-    elseif SharedConfig.Framework == 'qb-core' then
+    elseif sharedConfig.Framework == 'qb-core' then
         local core = getCoreObject()
         return core and core.Shared.Items[itemName] and core.Shared.Items[itemName].label or itemName
-    elseif SharedConfig.Framework == 'es_extended' then
+    elseif sharedConfig.Framework == 'es_extended' then
         local esx = exports['es_extended']:getSharedObject()
         local items = esx and esx.GetItems()
         return items and items[itemName] and items[itemName].label or itemName
@@ -53,9 +55,9 @@ Framework.GetItemLabel = function(itemName)
 end
 
 Framework.ToggleDuty = function()
-    if SharedConfig.Framework == 'qbx_core' or SharedConfig.Framework == 'qb-core' then
+    if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
         TriggerServerEvent("QBCore:ToggleDuty")
-    elseif SharedConfig.Framework == 'es_extended' then
+    elseif sharedConfig.Framework == 'es_extended' then
         TriggerServerEvent("esx:toggleDuty")
     end
 end
@@ -63,13 +65,13 @@ end
 ---@diagnostic disable-next-line: duplicate-set-field
 Framework.HasItem = function(item, rAmount)
     local amount = rAmount or 1
-    if SharedConfig.Framework == 'qbx_core' then
+    if sharedConfig.Framework == 'qbx_core' then
         local count = exports.ox_inventory:Search('count', item)
         return count and count >= amount
-    elseif SharedConfig.Framework == 'qb-core' then
+    elseif sharedConfig.Framework == 'qb-core' then
         local core = getCoreObject()
         return core and core.Functions.HasItem(item, amount) or false
-    elseif SharedConfig.Framework == 'es_extended' then
+    elseif sharedConfig.Framework == 'es_extended' then
         local esx = exports['es_extended']:getSharedObject()
         local xPlayer = esx and esx.GetPlayerData()
         local itemData = xPlayer and xPlayer.getInventoryItem(item)
@@ -79,7 +81,7 @@ Framework.HasItem = function(item, rAmount)
 end
 
 Framework.Progressbar = function(params)
-    local framework = SharedConfig.Framework
+    local framework = sharedConfig.Framework
     local name = params.name or 'progress'
     local label = params.label or 'Action'
     local duration = params.duration or 5000
@@ -120,10 +122,10 @@ Framework.Progressbar = function(params)
 end
 
 Framework.GetCarData = function(vehicle)
-    if SharedConfig.Framework == 'qbx_core' then
+    if sharedConfig.Framework == 'qbx_core' then
         local vehicles = exports.qbx_core:GetVehiclesByName()
         return vehicles[vehicle] or nil
-    elseif SharedConfig.Framework == 'qb-core' then
+    elseif sharedConfig.Framework == 'qb-core' then
         local core = getCoreObject()
         return core and core.Shared.Vehicles[vehicle] or nil
     end
@@ -132,23 +134,23 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 Framework.Functions = function()
-    if SharedConfig.Framework == 'qbx_core' then return exports.qbx_core
-    elseif SharedConfig.Framework == 'qb-core' then return getCoreObject() and getCoreObject().Functions end
+    if sharedConfig.Framework == 'qbx_core' then return exports.qbx_core
+    elseif sharedConfig.Framework == 'qb-core' then return getCoreObject() and getCoreObject().Functions end
 end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 Framework.SharedItems = function(item)
-    if SharedConfig.Framework == 'qbx_core' then
+    if sharedConfig.Framework == 'qbx_core' then
         return exports.ox_inventory:Items()[item]
-    elseif SharedConfig.Framework == 'qb-core' then
+    elseif sharedConfig.Framework == 'qb-core' then
         local core = getCoreObject()
         return core and core.Shared.Items[item]
     end
 end
 
-if SharedConfig.Framework ~= 'none' then
-    Framework.Status.Commands = SharedConfig.Framework
-    Framework.Status.Framework = SharedConfig.Framework
+if sharedConfig.Framework ~= 'none' then
+    Framework.Status.Commands = sharedConfig.Framework
+    Framework.Status.Framework = sharedConfig.Framework
 end
 
 return Framework

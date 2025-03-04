@@ -1,4 +1,3 @@
-SharedConfig = SharedConfig or {}
 local manualConfig = require 'config.manual'
 
 -- Default manualSelection if not provided in config
@@ -39,7 +38,7 @@ local function detectResource(type, resourceNames)
     end
 end
 
-SharedConfig = {
+return {
     Framework = detectResource('Framework', {'qbx_core', 'qb-core', 'es_extended'}),
     Inventory = detectResource('Inventory', {'ox_inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory'}),
     Banking = detectResource('Banking', {'Renewed-Banking', 'okokBanking', 'qb-banking', 'esx_jobbank'}),
@@ -47,7 +46,3 @@ SharedConfig = {
     Menu = manualConfig.ForceQbMenu and 'qb-menu' or detectResource('Menu', {'ox_lib', 'qb-menu'}),
     Debug = manualConfig.Debug or false
 }
-
-LogDebug('[Dank Utils] SharedConfig initialized: Framework=' .. SharedConfig.Framework .. ', Inventory=' .. SharedConfig.Inventory)
-
-return SharedConfig

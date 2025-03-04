@@ -23,9 +23,12 @@ client_scripts {
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
+    'server/*.lua',
+}
+
+files {
     'config/manual.lua',
     'config/shared.lua',
-    'server/*.lua',
 }
 
 escrow_ignore {

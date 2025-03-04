@@ -4,41 +4,43 @@ Framework = Framework or {}
 Framework.Status = Framework.Status or {}
 Framework.Banking = Framework.Banking or {}
 
+local sharedConfig = require 'config.shared'
+
 Framework.Banking.GetAccountBalance = function(account)
-    if SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
-        return exports[SharedConfig.Banking]:GetAccount(account)
-    elseif SharedConfig.Banking == 'Renewed-Banking' then
-        return exports[SharedConfig.Banking]:getAccountMoney(account)
-    elseif SharedConfig.Banking == 'esx_jobbank' then
-        return exports[SharedConfig.Banking]:getJobAccountBalance(account)
+    if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' then
+        return exports[sharedConfig.Banking]:GetAccount(account)
+    elseif sharedConfig.Banking == 'Renewed-Banking' then
+        return exports[sharedConfig.Banking]:getAccountMoney(account)
+    elseif sharedConfig.Banking == 'esx_jobbank' then
+        return exports[sharedConfig.Banking]:getJobAccountBalance(account)
     else
-        LogDebug('[Dank Utils] Unsupported banking system for GetAccountBalance: ' .. tostring(SharedConfig.Banking))
+        LogDebug('[Dank Utils] Unsupported banking system for GetAccountBalance: ' .. tostring(sharedConfig.Banking))
         return nil
     end
 end
 
 Framework.Banking.AddMoney = function(account, amount)
-    if SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
-        return exports[SharedConfig.Banking]:AddMoney(account, amount)
-    elseif SharedConfig.Banking == 'Renewed-Banking' then
-        return exports[SharedConfig.Banking]:addAccountMoney(account, amount)
-    elseif SharedConfig.Banking == 'esx_jobbank' then
-        return exports[SharedConfig.Banking]:addJobAccountMoney(account, amount)
+    if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' then
+        return exports[sharedConfig.Banking]:AddMoney(account, amount)
+    elseif sharedConfig.Banking == 'Renewed-Banking' then
+        return exports[sharedConfig.Banking]:addAccountMoney(account, amount)
+    elseif sharedConfig.Banking == 'esx_jobbank' then
+        return exports[sharedConfig.Banking]:addJobAccountMoney(account, amount)
     else
-        LogDebug('[Dank Utils] Unsupported banking system for AddMoney: ' .. tostring(SharedConfig.Banking))
+        LogDebug('[Dank Utils] Unsupported banking system for AddMoney: ' .. tostring(sharedConfig.Banking))
         return nil
     end
 end
 
 Framework.Banking.RemoveMoney = function(account, amount)
-    if SharedConfig.Banking == 'okokBanking' or SharedConfig.Banking == 'qb-banking' then
-        return exports[SharedConfig.Banking]:RemoveMoney(account, amount)
-    elseif SharedConfig.Banking == 'Renewed-Banking' then
-        return exports[SharedConfig.Banking]:removeAccountMoney(account, amount)
-    elseif SharedConfig.Banking == 'esx_jobbank' then
-        return exports[SharedConfig.Banking]:removeJobAccountMoney(account, amount)
+    if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' then
+        return exports[sharedConfig.Banking]:RemoveMoney(account, amount)
+    elseif sharedConfig.Banking == 'Renewed-Banking' then
+        return exports[sharedConfig.Banking]:removeAccountMoney(account, amount)
+    elseif sharedConfig.Banking == 'esx_jobbank' then
+        return exports[sharedConfig.Banking]:removeJobAccountMoney(account, amount)
     else
-        LogDebug('[Dank Utils] Unsupported banking system for RemoveMoney: ' .. tostring(SharedConfig.Banking))
+        LogDebug('[Dank Utils] Unsupported banking system for RemoveMoney: ' .. tostring(sharedConfig.Banking))
         return nil
     end
 end
@@ -50,15 +52,15 @@ local validBanking = {
     ['Renewed-Banking'] = true,
     ['esx_jobbank'] = true
 }
-if SharedConfig.Banking and validBanking[SharedConfig.Banking] then
-    local state = GetResourceState(SharedConfig.Banking)
+if sharedConfig.Banking and validBanking[sharedConfig.Banking] then
+    local state = GetResourceState(sharedConfig.Banking)
     if state == 'started' or state == 'starting' then
-        Framework.Status.Banking = SharedConfig.Banking
+        Framework.Status.Banking = sharedConfig.Banking
     else
-        LogDebug('[Dank Utils] Banking resource "' .. SharedConfig.Banking .. '" is not active.')
+        LogDebug('[Dank Utils] Banking resource "' .. sharedConfig.Banking .. '" is not active.')
     end
-elseif SharedConfig.Banking ~= 'AutoDetect' then
-    LogDebug('[Dank Utils] Unsupported Banking option: ' .. tostring(SharedConfig.Banking))
+elseif sharedConfig.Banking ~= 'AutoDetect' then
+    LogDebug('[Dank Utils] Unsupported Banking option: ' .. tostring(sharedConfig.Banking))
 end
 
 return Framework
