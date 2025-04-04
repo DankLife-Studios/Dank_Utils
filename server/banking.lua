@@ -8,11 +8,14 @@ local sharedConfig = require 'config.shared'
 
 Framework.Banking.GetAccountBalance = function(account)
     if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' then
-        return exports[sharedConfig.Banking]:GetAccount(account)
+        local balance =  exports[sharedConfig.Banking]:GetAccount(account)
+        return balance
     elseif sharedConfig.Banking == 'Renewed-Banking' then
-        return exports[sharedConfig.Banking]:getAccountMoney(account)
+        local balance = exports['Renewed-Banking']:getAccountMoney(account)
+        return balance
     elseif sharedConfig.Banking == 'esx_jobbank' then
-        return exports[sharedConfig.Banking]:getJobAccountBalance(account)
+        local balance =  exports[sharedConfig.Banking]:getJobAccountBalance(account)
+        return balance
     else
         LogDebug('[Dank Utils] Unsupported banking system for GetAccountBalance: ' .. tostring(sharedConfig.Banking))
         return nil
@@ -33,8 +36,6 @@ Framework.Banking.AddMoney = function(account, amount)
 end
 
 Framework.Banking.RemoveMoney = function(account, amount)
-    print('account:', account)
-    print('total_cost:', amount)
     if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' then
         return exports[sharedConfig.Banking]:RemoveMoney(account, amount)
     elseif sharedConfig.Banking == 'Renewed-Banking' then
