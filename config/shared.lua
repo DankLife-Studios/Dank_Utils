@@ -7,6 +7,7 @@ local manualSelection = manualConfig.manualSelection or {
     Banking = 'AutoDetect',
     Target = 'AutoDetect',
     Menu = 'AutoDetect',
+    Phone = 'AutoDetect',
 }
 
 function LogDebug(message)
@@ -30,7 +31,7 @@ local function detectResource(type, resourceNames)
     local selection = manualSelection[type] or 'AutoDetect'
     if selection == 'AutoDetect' then
         return getActiveResource(resourceNames)
-    elseif GetResourceState(selection) == 'started' or GetResourceState(selection) == 'starting' then
+    elseif GetResourceState(selection) == 'starting' or GetResourceState(selection) == 'started' then
         return selection
     else
         print('[Dank Utils] Manually selected ' .. type .. ' "' .. selection .. '" is not active.')
@@ -43,6 +44,7 @@ return {
     Inventory = detectResource('Inventory', {'ox_inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory'}),
     Banking = detectResource('Banking', {'Renewed-Banking', 'okokBanking', 'qb-banking', 'esx_jobbank'}),
     Target = detectResource('Target', {'ox_target', 'qb-target'}),
+	Phone = detectResource('Phone', {'npwd', 'lb-phone'}),
     Menu = manualConfig.ForceQbMenu and 'qb-menu' or detectResource('Menu', {'ox_lib', 'qb-menu'}),
     Debug = manualConfig.Debug or false
 }

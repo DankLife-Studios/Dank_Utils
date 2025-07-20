@@ -27,6 +27,33 @@ Framework.GetAllPlayers = function()
     return {}
 end
 
+Framework.GetDutyCount = function(job)
+	local dutyCount, dutyPlayers
+    if sharedConfig.Framework == 'qbx_core' then
+		dutyCount, dutyPlayers = exports.qbx_core:GetDutyCountJob(job)
+        return dutyCount
+    elseif sharedConfig.Framework == 'qb-core' then
+        local QBCore = exports['qb-core']:GetCoreObject()
+		dutyCount = QBCore.Functions.GetDutyCount(job)
+        return true
+    elseif sharedConfig.Framework == 'es_extended' then
+        local ESX = exports['es_extended']:getSharedObject()
+        return 0
+    end
+    return 0
+end
+
+Framework.SetJobDuty = function(source, onDuty)
+    if sharedConfig.Framework == 'qbx_core' then
+		exports.qbx_core:SetJobDuty(source, onDuty)
+    elseif sharedConfig.Framework == 'qb-core' then
+        local QBCore = exports['qb-core']:GetCoreObject()
+		QBCore.Functions.SetJobDuty(onDuty)
+    elseif sharedConfig.Framework == 'es_extended' then
+        local ESX = exports['es_extended']:getSharedObject()
+    end
+end
+
 Framework.GetPlayerByCitizenId = function(citizenid)
     if sharedConfig.Framework == 'qbx_core' then
         return exports.qbx_core:GetPlayerByCitizenId(citizenid)

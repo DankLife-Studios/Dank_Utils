@@ -6,6 +6,7 @@ return {
         Banking = 'AutoDetect',   -- Options: 'Renewed-Banking', 'okokBanking', 'qb-banking', 'esx_jobbank', 'AutoDetect'
         Target = 'AutoDetect',    -- Options: 'ox_target', 'qb-target', 'AutoDetect'
         Menu = 'AutoDetect',      -- Options: 'ox_lib', 'qb-menu', 'AutoDetect'
+        Phone = 'AutoDetect',      -- Options: 'npwd', 'lb-phone', 'AutoDetect'
     },
     ForceQbMenu = false -- Override to force 'qb-menu' regardless of detection
 }
