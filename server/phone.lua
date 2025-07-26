@@ -14,6 +14,10 @@ Framework.Phone.GetEquippedPhoneNumber = function(source)
 	elseif sharedConfig.Phone == 'lb-phone' then
 		phoneNumber = exports["lb-phone"]:GetEquippedPhoneNumber(source)
         return phoneNumber
+	elseif sharedConfig.Phone == 'qb-phone' then
+		local Player = Framework.GetPlayer(source)
+		phoneNumber = Player.PlayerData.charinfo.phone
+        return phoneNumber
     else
         LogDebug('[Dank Utils] Unsupported phone system for GetEquippedPhoneNumber: ' .. tostring(sharedConfig.Phone))
         return nil
@@ -23,6 +27,7 @@ end
 -- Set phone status if valid and active
 local validPhones = {
     ['npwd'] = true,
+    ['qb-phone'] = true,
     ['lb-phone'] = true
 }
 

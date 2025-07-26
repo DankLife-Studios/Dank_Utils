@@ -42,9 +42,9 @@ end
 return {
     Framework = detectResource('Framework', {'qbx_core', 'qb-core', 'es_extended'}),
     Inventory = detectResource('Inventory', {'ox_inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory'}),
-    Banking = detectResource('Banking', {'Renewed-Banking', 'okokBanking', 'qb-banking', 'esx_jobbank'}),
+    Banking = detectResource('Banking', {'Renewed-Banking', 'snipe-banking', 'qb-banking', 'esx_jobbank'}),
     Target = detectResource('Target', {'ox_target', 'qb-target'}),
-	Phone = detectResource('Phone', {'npwd', 'lb-phone'}),
+	Phone = detectResource('Phone', {'npwd', 'lb-phone', 'qb-phone'}),
     Menu = manualConfig.ForceQbMenu and 'qb-menu' or detectResource('Menu', {'ox_lib', 'qb-menu'}),
     Debug = manualConfig.Debug or false
 }

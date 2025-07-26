@@ -6,7 +6,7 @@ Framework.Banking = Framework.Banking or {}
 
 local sharedConfig = require 'config.shared'
 
-if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' or sharedConfig.Banking == 'Renewed-Banking' then
+if sharedConfig.Banking == 'okokBanking' or sharedConfig.Banking == 'qb-banking' or sharedConfig.Banking == 'snipe-banking' or sharedConfig.Banking == 'Renewed-Banking' then
     Framework.Status.Banking = sharedConfig.Banking
 end
 

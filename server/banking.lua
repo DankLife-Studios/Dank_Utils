@@ -13,6 +13,9 @@ Framework.Banking.GetAccountBalance = function(account)
     elseif sharedConfig.Banking == 'Renewed-Banking' then
         local balance = exports['Renewed-Banking']:getAccountMoney(account)
         return balance
+    elseif sharedConfig.Banking == 'snipe-banking' then
+        local balance = exports['snipe-banking']:GetAccountBalance(account)
+        return balance
     elseif sharedConfig.Banking == 'esx_jobbank' then
         local balance =  exports[sharedConfig.Banking]:getJobAccountBalance(account)
         return balance
@@ -27,6 +30,8 @@ Framework.Banking.AddMoney = function(account, amount)
         return exports[sharedConfig.Banking]:AddMoney(account, amount)
     elseif sharedConfig.Banking == 'Renewed-Banking' then
         return exports['Renewed-Banking']:addAccountMoney(account, amount)
+    elseif sharedConfig.Banking == 'snipe-banking' then
+        return exports['snipe-banking']:AddMoneyToAccount(account, amount)
     elseif sharedConfig.Banking == 'esx_jobbank' then
         return exports[sharedConfig.Banking]:addJobAccountMoney(account, amount)
     else
@@ -40,6 +45,8 @@ Framework.Banking.RemoveMoney = function(account, amount)
         return exports[sharedConfig.Banking]:RemoveMoney(account, amount)
     elseif sharedConfig.Banking == 'Renewed-Banking' then
         return exports['Renewed-Banking']:removeAccountMoney(account, amount)
+    elseif sharedConfig.Banking == 'snipe-banking' then
+        return exports['snipe-banking']:RemoveMoneyFromAccount(account, amount)
     elseif sharedConfig.Banking == 'esx_jobbank' then
         return exports[sharedConfig.Banking]:removeJobAccountMoney(account, amount)
     else
@@ -52,6 +59,7 @@ end
 local validBanking = {
     ['okokBanking'] = true,
     ['qb-banking'] = true,
+    ['snipe-banking'] = true,
     ['Renewed-Banking'] = true,
     ['esx_jobbank'] = true
 }
