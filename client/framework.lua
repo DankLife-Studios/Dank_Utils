@@ -111,11 +111,24 @@ Framework.Progressbar = function(params)
             core.Functions.Progressbar(name, label, duration, useWhileDead, canCancel, disableControls, animation, prop, nil, onFinish, onCancel)
         end
     elseif framework == 'es_extended' then
-        -- Fallback to a basic implementation if no progress bar event exists
-        LogDebug('Progressbar: ESX progress bar not natively supported, using chat fallback.')
-        Framework.Notify(label .. ' in progress...', 'info', duration)
-        Wait(duration)
-        onFinish()
+        if lib then
+            local options = {
+                duration = duration,
+                label = label,
+                useWhileDead = useWhileDead,
+                canCancel = canCancel,
+                disable = disableControls,
+                anim = animation,
+                prop = prop,
+            }
+            if lib.progressBar(options) then onFinish() else onCancel() end
+        else
+            -- Fallback to a basic implementation if no progress bar event exists
+            LogDebug('Progressbar: ESX progress bar not natively supported, using chat fallback.')
+            Framework.Notify(label .. ' in progress...', 'info', duration)
+            Wait(duration)
+            onFinish()
+        end
     else
         LogDebug('Progressbar: No framework detected.')
     end

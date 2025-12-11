@@ -85,7 +85,7 @@ end
 
 Framework.Target.AddTargetModel = function(model, options)
     if sharedConfig.Target == 'qb-target' then
-        exports['qb-target']:AddTargetEntity(model, {
+        exports['qb-target']:AddTargetModel(model, {
             options = {{
                 type = "client",
                 icon = options.icon or "fa-regular fa-comments",

@@ -35,10 +35,23 @@ Framework.GetDutyCount = function(job)
     elseif sharedConfig.Framework == 'qb-core' then
         local QBCore = exports['qb-core']:GetCoreObject()
 		dutyCount = QBCore.Functions.GetDutyCount(job)
-        return true
+        return dutyCount
     elseif sharedConfig.Framework == 'es_extended' then
         local ESX = exports['es_extended']:getSharedObject()
-        return 0
+        if ESX.GetExtendedPlayers then
+            local xPlayers = ESX.GetExtendedPlayers('job', job)
+            return #xPlayers
+        else
+            local xPlayers = ESX.GetPlayers()
+            local count = 0
+            for _, source in ipairs(xPlayers) do
+                local xPlayer = ESX.GetPlayerFromId(source)
+                if xPlayer and xPlayer.job.name == job then
+                    count = count + 1
+                end
+            end
+            return count
+        end
     end
     return 0
 end
@@ -61,12 +74,13 @@ Framework.GetPlayerByCitizenId = function(citizenid)
         local QBCore = exports['qb-core']:GetCoreObject()
         return QBCore and QBCore.Functions.GetPlayerByCitizenId(citizenid)
     elseif sharedConfig.Framework == 'es_extended' then
-        LogDebug('GetPlayerByCitizenId not natively supported for ESX.')
-        return nil
+        local ESX = exports['es_extended']:getSharedObject()
+        return ESX.GetPlayerFromIdentifier(citizenid)
     end
 end
 
 local function handleItemNotification(source, item, action, amount)
+    if sharedConfig.Inventory == 'ox_inventory' then return end -- ox_inventory handles its own notifications
     if sharedConfig.Framework == 'qb-core' then
         local QBCore = exports['qb-core']:GetCoreObject()
         TriggerClientEvent('inventory:client:ItemBox', source, QBCore.Shared.Items[item], action, amount)
