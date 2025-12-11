@@ -70,7 +70,7 @@ Framework.Inventory.HasItems = function(requiredItems)
                 table.insert(missingItems, {item = item, missingAmount = requiredAmount})
             end
         end
-    elseif Framework.Status.Inventory == 'ps-inventory' or Framework.Status.Inventory == 'qb-inventory' or Framework.Status.Inventory == 'qb-old-inventory' then
+    elseif Framework.Status.Inventory == 'ps-inventory' or Framework.Status.Inventory == 'qb-inventory' or Framework.Status.Inventory == 'qb-old-inventory' or Framework.Status.Inventory == 'esx_inventory' then
         for item, requiredAmount in pairs(requiredItems) do
             if not Framework.HasItem(item, requiredAmount) then
                 table.insert(missingItems, {item = item, missingAmount = requiredAmount})

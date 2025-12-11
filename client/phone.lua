@@ -6,7 +6,7 @@ Framework.Phone = Framework.Phone or {}
 
 local sharedConfig = require 'config.shared'
 
-if sharedConfig.Phone == 'npwd' or sharedConfig.Phone == 'ql-phone' then
+if sharedConfig.Phone == 'npwd' or sharedConfig.Phone == 'lb-phone' or sharedConfig.Phone == 'qb-phone' then
     Framework.Status.Phone = sharedConfig.Phone
 end
 
