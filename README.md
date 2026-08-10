@@ -1,33 +1,27 @@
 # Dank_Utils
 
-Dank_Utils is a versatile framework and utility script designed for FiveM, providing enhanced compatibility and functionality with various frameworks and systems. It includes automatic detection for supported frameworks, inventory systems, and banking systems.
-
-## Dependencies
-
-Dank_Utils requires the following dependency:
-
-- **ox_lib**: This library is essential for Dank_Utils to function properly. You can find it at [https://github.com/overextended/ox_lib](https://github.com/overextended/ox_lib)
-
-Make sure to install and configure ox_lib before using Dank_Utils.
+Dank_Utils is a versatile, high-performance, **lazy-loaded** framework and utility library designed for FiveM, providing enhanced compatibility and functionality with various frameworks and systems. It seamlessly abstracts standard operations across frameworks, inventory systems, and banking systems.
 
 ## Table of Contents
 - [Features](#features)
 - [Supported Systems](#supported-systems)
 - [Installation](#installation)
 - [Configuration](#configuration)
-- [Missing Components](#missing-components)
+- [Implementing in Your Scripts](#implementing-in-your-scripts)
+- [Version Checking Integration](#version-checking-integration)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
 
 ## Features
 
-- **Automatic Detection**: Automatically detects and selects active frameworks, inventory systems, and banking systems.
-- **Framework Integration**: Supports popular frameworks like QB-Core, ESX, and others.
+- **Lazy-Loaded Engine**: Dank_Utils acts as a true library. It only loads the specific modules you invoke into memory, ensuring zero overhead on your server.
+- **Automatic Detection**: Automatically detects and selects active frameworks, inventory systems, and banking systems dynamically.
+- **Unified API**: Exposes a clean, unified `Dank` global object to interact with multiple frameworks via the same syntax.
+- **Framework Integration**: Supports popular frameworks like QB-Core, ESX, and QBX-Core.
 - **Inventory System Support**: Integrates with various inventory systems such as OxInventory, QB Inventory, and more.
 - **Banking System Compatibility**: Works with several banking systems including Renewed-Banking and OKOKBanking.
-- **Flexible Configuration**: Allows manual selection of preferred systems if auto-detection is not needed.
-- **Professional Messaging**: Alerts users if any supported components are missing and provides guidance for resolution.
+- **Built-in Version Checker**: Includes a reusable, dependency-free version checker function for all your scripts.
 
 ## Supported Systems
 
@@ -36,106 +30,193 @@ Dank_Utils supports automatic detection and integration with the following syste
 - **Frameworks**:
   - QB-Core
   - QBX-Core
-  - ESX -- NEEDS SOMEONE TO TEST THIS!!
+  - ESX
+  - ND_Core
+  - ox_core
 
 - **Inventory Systems**:
   - OxInventory
   - QB Inventory
   - PS Inventory
   - QS Inventory
-  - ESX Inventory -- NEEDS SOMEONE TO TEST THIS!!
+  - ESX Inventory
+  - core_inventory
+  - chezza-inventory
+  - codem-inventory
 
 - **Banking Systems**:
+  - PEFCL
   - Renewed-Banking
   - QB Management
   - OKOKBanking
   - QB Banking
-  - ESX Jobbank -- NEEDS SOMEONE TO TEST THIS!!
+  - ESX Jobbank
+  - fd_banking
+
+- **Target Systems**:
+  - ox_target
+  - qb-target
+  - qtarget
+
+- **Menu Systems**:
+  - ox_lib
+  - qb-menu
+  - esx_menu_default
+  - nh-context
+  - zf_context
+
+- **Phone Systems**:
+  - lb-phone
+  - qs-smartphone
+  - qb-phone
+  - gksphone
+  - yseries (yphone)
 
 ## Installation
 
 1. **Add to Your Server Resources**: Download or clone the `Dank_Utils` repository and place the `Dank_Utils` folder into your FiveM server's `resources` directory.
 
-2. **Update `server.cfg`**: Ensure the Dank_Utils resource is started before any other resource that depends on it. Open your `server.cfg` file and add the following line:
-
-  ```lua
-  ensure Dank_Utils 
-  ```
-
-3. **IF YOU USE QBCORE** - You can add this to your `server.cfg` file, if you want to force the use of Qb-menu instead of Ox_lib menu.
-
-  ```lua
-  # QBCore UseTarget
-  setr ForceUseQbMenu true
-  ```
-
-4. **Configure Dependencies**: Update the `fxmanifest.lua` file by **following the instructions** provided within the file. **Uncomment** lines for frameworks or scripts you are using (remove the `--` at the beginning of the line). **Comment out** lines for frameworks or libraries you are not using (add `--` at the start of the line) or keep them commented.
-
-Here is an example illustrating how to configure your `fxmanifest.lua`:
-
-```lua
-fx_version 'cerulean'
-game 'gta5'
-
-name 'Dank_Utils'
-author 'Dankbudbaker'
-description 'A Framework & Script Compatibility For DankLife Scripts'
-script_version '0.4.1'
-
--- **INSTRUCTIONS:**
--- If you DO NOT use the framework or library mentioned, add or keep `--` at the start of the line to disable it.
--- If you USE the framework, ensure there is no `--` at the beginning of the line.
-
-shared_scripts {
-    '@ox_lib/init.lua',
-    '@qbx_core/modules/lib.lua', -- DISABLE THIS LINE IF YOU DON'T USE qbx_core (Keep or add --)
-    'config/shared.lua',
-    'shared/exports.lua'
-}
-
-client_scripts {
-    '@qbx_core/modules/playerdata.lua', -- DISABLE THIS LINE IF YOU DON'T USE qbx_core (Keep or add --)
-    'config/shared.lua',
-    'client/framework.lua',
-    'client/inventory.lua',
-    'client/banking.lua',
-    'client/target.lua'
-}
-
-server_scripts {
-    '@oxmysql/lib/MySQL.lua',
-    'config/shared.lua',
-    'server/framework.lua',
-    'server/inventory.lua',
-    'server/banking.lua',
-    'server/target.lua',
-    'server/version.lua'
-}
-
-escrow_ignore {
-    'shared/**',
-    'client/**',
-    'server/**'
-}
-
-lua54 'yes'
-use_experimental_fxv2_oal 'yes'
-```
-5. Add This to access the Framework
-
-```Lua
-local Framework = exports['Dank_Utils'].Framework()
-```
-
-6. Restart Your Server: After making these changes, restart your FiveM server to apply the configuration.
+2. **Update `server.cfg`**: Open your `server.cfg` file and add the following line (make sure it's placed before the scripts that rely on it):
+   ```lua
+   ensure Dank_Utils 
+   ```
 
 ## Configuration
 
-The script automatically detects active frameworks, inventory systems, and banking systems. You can manually specify preferred systems by editing the `manualSelection` table in your configuration. For detailed configuration instructions, refer to the `config/shared.lua` file.
+The script automatically detects active frameworks, inventory systems, and banking systems. However, if you run multiple conflicting systems or want to force a specific one, you can do so in `config/manual.lua`.
 
-## Missing Components
+Simply open `config/manual.lua` and uncomment the system you wish to force:
+```lua
+return {
+    Debug = false,
+    
+    -- Uncomment ONE framework to force manual selection. Otherwise, leave commented for AutoDetect.
+    -- Framework = 'qbx_core',
+    Framework = 'qb-core', -- This will force qb-core
+    -- Framework = 'es_extended',
+}
+```
 
-If any supported components are missing, the script will alert you with a professional message. Ensure that the required systems are correctly installed and started.
+## Implementing in Your Scripts
+
+Since Dank_Utils is a lazy-loaded library, you don't use standard exports anymore.
+
+1. In the `fxmanifest.lua` of your target script, add the `init.lua` to your shared scripts:
+```lua
+shared_scripts {
+    '@Dank_Utils/init.lua',
+    'config.lua',
+    -- your other shared files
+}
+```
+
+2. You now have access to the global `Dank` object in your script's client and server files!
+```lua
+-- Example: Fetch player data seamlessly
+local player = Dank.player.get(source)
+
+-- Example: Add money seamlessly
+Dank.banking.addMoney(accountName, 500)
+```
+*Note: Ensure you add `F:/Mystic_Dreams/MysticDreams.base/resources/[dank]/Dank_Utils` to your VS Code `Lua.workspace.library` for full autocomplete!*
+
+## Documentation (API Reference)
+
+<details>
+<summary><b>Dank.player</b> (Player Data & Management)</summary>
+
+- `[Server]` **`Dank.player.get(source)`** - Returns the player object for the given source.
+- `[Server]` **`Dank.player.getAll()`** - Returns a table of all active player objects on the server.
+- `[Server]` **`Dank.player.getByCitizenId(citizenid)`** - Returns a player object by their citizen ID.
+- `[Client]` **`Dank.player.getData()`** - Returns the local player's data table.
+</details>
+
+<details>
+<summary><b>Dank.inventory</b> (Stashes, Items & Usage)</summary>
+
+- `[Server]` **`Dank.inventory.addItem(source, item, amount)`** - Adds an item to a player's inventory.
+- `[Server]` **`Dank.inventory.removeItem(source, item, amount)`** - Removes an item from a player's inventory.
+- `[Server]` **`Dank.inventory.getItemByName(source, item)`** - Returns data for a specific item the player holds.
+- `[Server]` **`Dank.inventory.createUseableItem(item, callback)`** - Registers a usable item and fires the callback.
+- `[Server]` **`Dank.inventory.hasItem(source, item, amount)`** - Checks if a player has a specified amount of an item.
+- `[Client]` **`Dank.inventory.openStash(stashName, maxweight, slots)`** - Opens a specific stash UI.
+- `[Client]` **`Dank.inventory.getImageUrl()`** - Retrieves the root image URL path for the active inventory UI.
+- `[Client]` **`Dank.inventory.hasItem(item, amount)`** - Checks if the local player has an item.
+- `[Client]` **`Dank.inventory.hasItems(requiredItems)`** - Checks for multiple items `{[item] = count}`. Returns `true/false` and missing items.
+- `[Client]` **`Dank.inventory.getItemLabel(itemName)`** - Retrieves the display label of an item name.
+- `[Shared]` **`Dank.inventory.sharedItems(item)`** - Retrieves shared item configuration data.
+</details>
+
+<details>
+<summary><b>Dank.ui</b> (Visuals & Interactions)</summary>
+
+- `[Server]` **`Dank.ui.notify(source, message, type, time)`** - Sends a UI notification to a player.
+- `[Client]` **`Dank.ui.notify(message, type, time)`** - Shows a local UI notification.
+- `[Client]` **`Dank.ui.toggleDuty()`** - Toggles the local player's duty status.
+- `[Client]` **`Dank.ui.progressbar(params)`** - Renders a progress bar with animations. Params: `{name, label, duration, useWhileDead, canCancel, disableControls, animation, prop, onFinish, onCancel}`
+</details>
+
+<details>
+<summary><b>Dank.vehicle</b> (Vehicle Utilities)</summary>
+
+- `[Server]` **`Dank.vehicle.spawn(model, coords, heading, cb)`** - Spawns a vehicle server-side and returns it via callback.
+- `[Client]` **`Dank.vehicle.getData(model)`** - Retrieves the configuration data for a vehicle model.
+</details>
+
+<details>
+<summary><b>Dank.banking</b> (Economy Management)</summary>
+
+- `[Server]` **`Dank.banking.getAccountBalance(account)`** - Returns the balance for a society or standard account.
+- `[Server]` **`Dank.banking.addMoney(account, amount)`** - Deposits money into an account.
+- `[Server]` **`Dank.banking.removeMoney(account, amount)`** - Withdraws money from an account.
+</details>
+
+<details>
+<summary><b>Dank.core</b> (Core Overrides & Updates)</summary>
+
+- `[Shared]` **`Dank.core.getFunctions()`** - Exposes raw framework functions if you need direct overrides.
+- `[Server]` **`Dank.core.getJob(jobname)`** - Fetches the configuration for a specific job.
+- `[Server]` **`Dank.core.getAllJobs()`** - Fetches all registered jobs.
+- `[Server]` **`Dank.core.addCommand(name, description, args, restricted, callback, group)`** - Registers a framework-agnostic command.
+- `[Server]` **`Dank.core.versionCheck(options)`** - Initializes the version checking loop.
+</details>
+
+<details>
+<summary><b>Dank.phone</b> (Messaging & Communication)</summary>
+
+- `[Server]` **`Dank.phone.sendEmail(source, data)`** - Sends an email. `data` table supports: `sender`, `subject`, `message`, `button` (optional table with `buttonEvent` and `buttonData`).
+- `[Server]` **`Dank.phone.sendSMS(source, data)`** - Sends an SMS. `data` table supports: `number`, `message`.
+</details>
+
+<details>
+<summary><b>Dank.target</b> (Third-Eye Interactions)</summary>
+
+- `[Client]` **`Dank.target.addBoxZone(name, coords, size, options)`** - Registers a targeting box zone. `size` is a vector2/table (x,y). `options` table supports `rotation`, `debugPoly`, `distance`, and standard `options` array.
+- `[Client]` **`Dank.target.addEntity(entity, options)`** - Registers an entity for targeting. `options` is a standard target options array.
+</details>
+
+<details>
+<summary><b>Dank.menu</b> (Context Menus & UIs)</summary>
+
+- `[Client]` **`Dank.menu.open(id, title, elements)`** - Opens a standardized context menu. `elements` is an array of tables supporting: `title`, `description` (optional), `icon` (optional), `event`, `args` (optional).
+</details>
+
+<br>
+
+## Version Checking Integration
+
+Dank_Utils provides a built-in, reusable version checker. Instead of duplicating version-checking scripts across all your resources, simply call this function on server start:
+
+```lua
+-- Inside your script's server.lua
+CreateThread(function()
+    Wait(1000) -- Small delay to ensure initialization
+    
+    if Dank and Dank.core and Dank.core.versionCheck then
+        Dank.core.versionCheck("Dank_Bahama_Mama") -- The script name expected in the JSON
+    end
+end)
+```
 
 ## Contributing
 

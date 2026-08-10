@@ -1,12 +1,48 @@
 return {
     Debug = false, -- Set to true to enable debug logging
-    manualSelection = {
-        Framework = 'AutoDetect', -- Options: 'qbx_core', 'qb-core', 'es_extended', 'AutoDetect'
-        Inventory = 'AutoDetect', -- Options: 'ox_inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory', 'AutoDetect'
-        Banking = 'AutoDetect',   -- Options: 'Renewed-Banking', 'okokBanking', 'snipe-banking', 'qb-banking', 'esx_jobbank', 'AutoDetect'
-        Target = 'AutoDetect',    -- Options: 'ox_target', 'qb-target', 'AutoDetect'
-        Menu = 'AutoDetect',      -- Options: 'ox_lib', 'qb-menu', 'AutoDetect'
-        Phone = 'AutoDetect',      -- Options: 'npwd', 'lb-phone', 'qb-phone', 'AutoDetect'
-    },
-    ForceQbMenu = false -- Override to force 'qb-menu' regardless of detection
+
+    -- Uncomment ONE framework to force manual selection. Otherwise, leave commented for AutoDetect.
+    -- Framework = 'qbx_core',
+    -- Framework = 'qb-core',
+    -- Framework = 'es_extended',
+    -- Framework = 'ND_Core',
+    -- Framework = 'ox_core',
+
+    -- Uncomment ONE inventory to force manual selection. Otherwise, leave commented for AutoDetect.
+    -- Inventory = 'ox_inventory',
+    -- Inventory = 'qb-inventory',
+    -- Inventory = 'ps-inventory',
+    -- Inventory = 'qs-inventory',
+    -- Inventory = 'esx_inventory',
+    -- Inventory = 'core_inventory',
+    -- Inventory = 'chezza-inventory',
+    -- Inventory = 'codem-inventory',
+
+    -- Uncomment ONE banking system to force manual selection. Otherwise, leave commented for AutoDetect.
+    -- Banking = 'Renewed-Banking',
+    -- Banking = 'okokBanking',
+    -- Banking = 'qb-banking',
+    -- Banking = 'qb-management',
+    -- Banking = 'esx_jobbank',
+    -- Banking = 'pefcl',
+    -- Banking = 'fd_banking',
+
+    -- Uncomment ONE target system to force manual selection. Otherwise, leave commented for AutoDetect.
+    -- Target = 'ox_target',
+    -- Target = 'qb-target',
+    -- Target = 'qtarget',
+
+    -- Uncomment ONE menu system to force manual selection. Otherwise, leave commented for AutoDetect.
+    -- Menu = 'ox_lib',
+    -- Menu = 'qb-menu',
+    -- Menu = 'esx_menu_default',
+    -- Menu = 'nh-context',
+    -- Menu = 'zf_context',
+
+    -- Uncomment ONE phone system to force manual selection. Otherwise, leave commented for AutoDetect.
+    -- Phone = 'lb-phone',
+    -- Phone = 'qs-smartphone',
+    -- Phone = 'qb-phone',
+    -- Phone = 'gksphone',
+    -- Phone = 'yseries',
 }

@@ -1,14 +1,8 @@
-local manualConfig = require 'config.manual'
+local GetResourceState = GetResourceState
+local ipairs = ipairs
+local print = print
 
--- Default manualSelection if not provided in config
-local manualSelection = manualConfig.manualSelection or {
-    Framework = 'AutoDetect',
-    Inventory = 'AutoDetect',
-    Banking = 'AutoDetect',
-    Target = 'AutoDetect',
-    Menu = 'AutoDetect',
-    Phone = 'AutoDetect',
-}
+local manualConfig = require 'config.manual'
 
 function LogDebug(message)
     if manualConfig.Debug then
@@ -28,10 +22,10 @@ local function getActiveResource(resourceNames)
 end
 
 local function detectResource(type, resourceNames)
-    local selection = manualSelection[type] or 'AutoDetect'
+    local selection = manualConfig[type] or 'AutoDetect'
     if selection == 'AutoDetect' then
         return getActiveResource(resourceNames)
-    elseif GetResourceState(selection) == 'starting' or GetResourceState(selection) == 'started' then
+    elseif GetResourceState(selection) == 'started' or GetResourceState(selection) == 'starting' then
         return selection
     else
         print('[Dank Utils] Manually selected ' .. type .. ' "' .. selection .. '" is not active.')
@@ -40,11 +34,11 @@ local function detectResource(type, resourceNames)
 end
 
 return {
-    Framework = detectResource('Framework', {'qbx_core', 'qb-core', 'es_extended'}),
-    Inventory = detectResource('Inventory', {'ox_inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory'}),
-    Banking = detectResource('Banking', {'Renewed-Banking', 'snipe-banking', 'qb-banking', 'esx_jobbank'}),
-    Target = detectResource('Target', {'ox_target', 'qb-target'}),
-	Phone = detectResource('Phone', {'npwd', 'lb-phone', 'qb-phone'}),
-    Menu = manualConfig.ForceQbMenu and 'qb-menu' or detectResource('Menu', {'ox_lib', 'qb-menu'}),
+    Framework = detectResource('Framework', { 'qbx_core', 'qb-core', 'es_extended', 'ND_Core', 'ox_core' }),
+    Inventory = detectResource('Inventory', { 'ox_inventory', 'qb-inventory', 'ps-inventory', 'qs-inventory', 'esx_inventory', 'core_inventory', 'chezza-inventory', 'codem-inventory' }),
+    Banking = detectResource('Banking', { 'pefcl', 'Renewed-Banking', 'okokBanking', 'qb-banking', 'qb-management', 'esx_jobbank', 'fd_banking' }),
+    Target = detectResource('Target', { 'ox_target', 'qb-target', 'qtarget' }),
+    Menu = detectResource('Menu', { 'ox_lib', 'qb-menu', 'esx_menu_default', 'nh-context', 'zf_context' }),
+    Phone = detectResource('Phone', { 'lb-phone', 'qs-smartphone', 'qb-phone', 'gksphone', 'yseries' }),
     Debug = manualConfig.Debug or false
 }
