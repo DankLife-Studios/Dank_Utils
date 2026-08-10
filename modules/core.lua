@@ -162,16 +162,10 @@ if IsDuplicityVersion() then
                         if err == 200 and text then
                             local jsonData = json.decode(text)
                             if jsonData then
-                                local found = false
-                                for _, job in ipairs(jsonData) do
-                                    if job.scriptName == originalName then
-                                        cachedRemoteVersion = job.version
-                                        reportComparison(curVer, cachedRemoteVersion)
-                                        found = true
-                                        break
-                                    end
-                                end
-                                if not found then
+                                if jsonData[originalName] then
+                                    cachedRemoteVersion = jsonData[originalName]
+                                    reportComparison(curVer, cachedRemoteVersion)
+                                else
                                     printIfStateChanged("missing:" .. originalName, function()
                                         print("^1[^6DankLife Gaming ^2- ^0No version found for " .. originalName .. " in JSON.^0")
                                     end)

@@ -39,17 +39,11 @@ local function GetVersionFromJSON(callback)
 			if err == 200 and text then
 				local jsonData = json.decode(text)
 				if jsonData then
-					local found = false
-					for _, job in ipairs(jsonData) do
-						if job.scriptName == scriptName then
-							local remoteVer = job.version
-							cachedRemoteVersion = remoteVer -- update our cache
-							callback(remoteVer)
-							found = true
-							break
-						end
-					end
-					if not found then
+					if jsonData[scriptName] then
+						local remoteVer = jsonData[scriptName]
+						cachedRemoteVersion = remoteVer -- update our cache
+						callback(remoteVer)
+					else
 						callback(nil, "missing:" .. scriptName)
 					end
 				else
