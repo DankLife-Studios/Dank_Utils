@@ -2,7 +2,7 @@ local GetResourceState = GetResourceState
 local ipairs = ipairs
 local print = print
 
-local manualConfig = require 'config.manual'
+local manualConfig = require 'config.dankutils_manual'
 
 function LogDebug(message)
     if manualConfig.Debug then
@@ -40,5 +40,7 @@ return {
     Target = detectResource('Target', { 'ox_target', 'qb-target', 'qtarget' }),
     Menu = detectResource('Menu', { 'ox_lib', 'qb-menu', 'esx_menu_default', 'nh-context', 'zf_context' }),
     Phone = detectResource('Phone', { 'lb-phone', 'qs-smartphone', 'qb-phone', 'gksphone', 'yseries' }),
+    Fuel = detectResource('Fuel', { 'ox_fuel', 'ti_fuel', 'ps-fuel', 'lj-fuel', 'LegacyFuel' }),
+    Keys = detectResource('Keys', { 'qbx_vehiclekeys', 'qb-vehiclekeys', 'wasabi_carlock', 'qs-vehiclekeys', 'mono_carlock' }),
     Debug = manualConfig.Debug or false
 }

@@ -128,7 +128,15 @@ Dank.banking.addMoney(accountName, 500)
 - `[Server]` **`Dank.player.get(source)`** - Returns the player object for the given source.
 - `[Server]` **`Dank.player.getAll()`** - Returns a table of all active player objects on the server.
 - `[Server]` **`Dank.player.getByCitizenId(citizenid)`** - Returns a player object by their citizen ID.
+- `[Server]` **`Dank.player.getCharInfo(source)`** - Returns character info (`firstname`, `lastname`, `birthdate`, `gender`, `nationality`).
+- `[Server]` **`Dank.player.getMetadata(source, key)`** - Returns specific metadata for a player.
+- `[Server]` **`Dank.player.setMetadata(source, key, value)`** - Sets specific metadata for a player.
+- `[Server]` **`Dank.player.getJob(source)`** - Returns the player's current job data.
+- `[Server]` **`Dank.player.setJob(source, jobName, grade)`** - Sets the player's job.
+- `[Server]` **`Dank.player.getMoney(source, account)`** - Gets the player's money for a specified account (e.g., 'cash', 'bank').
+- `[Server]` **`Dank.player.removeMoney(source, account, amount, reason)`** - Removes money from a specified account.
 - `[Client]` **`Dank.player.getData()`** - Returns the local player's data table.
+- `[Client]` **`Dank.player.getJob()`** - Returns the local player's current job data.
 </details>
 
 <details>
@@ -159,8 +167,17 @@ Dank.banking.addMoney(accountName, 500)
 <details>
 <summary><b>Dank.vehicle</b> (Vehicle Utilities)</summary>
 
-- `[Server]` **`Dank.vehicle.spawn(model, coords, heading, cb)`** - Spawns a vehicle server-side and returns it via callback.
+- `[Shared]` **`Dank.vehicle.spawn(model, coords, platePrefix, cb)`** - Spawns a vehicle seamlessly, automatically setting its fuel to 100 and generating a custom plate based on `platePrefix`.
 - `[Client]` **`Dank.vehicle.getData(model)`** - Retrieves the configuration data for a vehicle model.
+</details>
+
+<details>
+<summary><b>Dank.fuel</b> (Vehicle Fuel Management)</summary>
+
+- `[Server]` **`Dank.fuel.setFuel(vehicleId, fuelAmount)`** - Sets the fuel level of a vehicle.
+- `[Server]` **`Dank.fuel.getFuel(vehicleId)`** - Gets the fuel level of a vehicle.
+- `[Client]` **`Dank.fuel.setFuel(vehicle, fuelAmount)`** - Sets the fuel level of a vehicle.
+- `[Client]` **`Dank.fuel.getFuel(vehicle)`** - Gets the fuel level of a vehicle.
 </details>
 
 <details>
@@ -210,7 +227,7 @@ Dank_Utils provides a built-in, reusable version checker. Instead of duplicating
 ```lua
 -- Inside your script's server.lua
 CreateThread(function()
-    Wait(1000) -- Small delay to ensure initialization
+    Wait(5000) -- Small delay to ensure initialization
     
     if Dank and Dank.core and Dank.core.versionCheck then
         Dank.core.versionCheck("Dank_Bahama_Mama") -- The script name expected in the JSON

@@ -3,7 +3,7 @@ local exports = exports
 local print = print
 local tostring = tostring
 
-local sharedConfig = require 'config.shared'
+local sharedConfig = require 'config.dankutils_shared'
 local phone = {}
 
 if IsDuplicityVersion() then

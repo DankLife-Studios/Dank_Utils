@@ -1,14 +1,41 @@
 local source = debug.getinfo(1, 'S').source
 local resourceName = source:match("@@([^/]+)/") or 'Dank_Utils'
 
+local loadedModules = {}
+
+local function customRequire(modname)
+    if loadedModules[modname] then return loadedModules[modname] end
+
+    local p = modname:gsub('%.', '/') .. '.lua'
+    local data = LoadResourceFile(resourceName, p)
+    if data then
+        local customEnv = setmetatable({ require = customRequire }, { __index = _ENV })
+        local chunk, err = load(data, '@@' .. resourceName .. '/' .. p, 't', customEnv)
+        if chunk then
+            local result = chunk()
+            loadedModules[modname] = result
+            return result
+        else
+            print(('^1[Dank_Utils] Error compiling require %s: %s^0'):format(modname, tostring(err)))
+        end
+    end
+    return require(modname)
+end
+
 Dank = setmetatable({}, {
     __index = function(self, key)
+        if key == 'config' then
+            local sharedConfig = customRequire('config.dankutils_shared')
+            self.config = sharedConfig
+            return sharedConfig
+        end
         local filePath = 'modules/' .. key .. '.lua'
         local fileData = LoadResourceFile(resourceName, filePath)
 
         if fileData then
-            -- Load the module chunk with the current _ENV so it inherits natives and globals
-            local chunk, err = load(fileData, '@@' .. resourceName .. '/' .. filePath, 't', _ENV)
+            -- Load the module chunk with the custom customRequire injected
+            local customEnv = setmetatable({ require = customRequire }, { __index = _ENV })
+            local chunk, err = load(fileData, '@@' .. resourceName .. '/' .. filePath, 't', customEnv)
 
             if chunk then
                 local moduleTable = chunk()

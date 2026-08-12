@@ -5,7 +5,7 @@ local exports = exports
 local print = print
 local Wait = Wait
 
-local sharedConfig = require 'config.shared'
+local sharedConfig = require 'config.dankutils_shared'
 local ui = {}
 
 if IsDuplicityVersion() then

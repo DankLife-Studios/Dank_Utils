@@ -45,4 +45,18 @@ return {
     -- Phone = 'qb-phone',
     -- Phone = 'gksphone',
     -- Phone = 'yseries',
+
+    -- Uncomment ONE fuel script to force manual selection. Otherwise, leave commented for AutoDetect.
+    -- Fuel = 'ox_fuel',
+    -- Fuel = 'LegacyFuel',
+    -- Fuel = 'lj-fuel',
+    -- Fuel = 'ti_fuel',
+    -- Fuel = 'ps-fuel',
+    
+    -- Uncomment ONE keys script to force manual selection. Otherwise, leave commented for AutoDetect.
+    -- Keys = 'qbx_vehiclekeys',
+    -- Keys = 'qb-vehiclekeys',
+    -- Keys = 'wasabi_carlock',
+    -- Keys = 'qs-vehiclekeys',
+    -- Keys = 'mono_carlock',
 }

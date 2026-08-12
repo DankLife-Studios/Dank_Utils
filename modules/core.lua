@@ -4,7 +4,7 @@ local string = string
 local tonumber = tonumber
 local type = type
 
-local sharedConfig = require 'config.shared'
+local sharedConfig = require 'config.dankutils_shared'
 local core = {}
 
 -- Provide access to raw framework functions just in case
@@ -184,6 +184,18 @@ if IsDuplicityVersion() then
                 end
                 Wait(checkInterval)
             end
+        end)
+    end
+else
+    -- CLIENT
+    -- Generic wrapper for player loaded events
+    if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
+        AddEventHandler('QBCore:Client:OnPlayerLoaded', function()
+            TriggerEvent('Dank:Client:OnPlayerLoaded')
+        end)
+    elseif sharedConfig.Framework == 'es_extended' then
+        AddEventHandler('esx:playerLoaded', function()
+            TriggerEvent('Dank:Client:OnPlayerLoaded')
         end)
     end
 end

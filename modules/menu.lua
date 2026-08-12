@@ -3,100 +3,129 @@ local exports = exports
 local print = print
 local tostring = tostring
 local pairs = pairs
+local ipairs = ipairs
+local type = type
 local table = table
 
-local sharedConfig = require 'config.shared'
+local sharedConfig = require 'config.dankutils_shared'
 local menu = {}
+local registeredMenus = {}
 
 if not IsDuplicityVersion() then
     -- CLIENT
-    -- Abstracting opening a menu
-    -- elements expects: { { title = string, description = string (optional), icon = string (optional), event = string, args = any (optional) } }
-    menu.open = function(id, title, elements)
+
+    -- Register a menu definition
+    -- menuData expects: { id = string, title = string, options = table }
+    menu.register = function(menuData)
+        if type(menuData) ~= 'table' or not menuData.id then
+            print('^3[Dank_Utils] Menu: Invalid menuData passed to register.^0')
+            return
+        end
+        registeredMenus[menuData.id] = menuData
+
         local menuType = sharedConfig.Menu
         if menuType == 'ox_lib' then
-            if not lib then print('^3[Dank_Utils] Menu: ox_lib not found.^0') return end
-            local options = {}
-            for _, el in pairs(elements) do
-                table.insert(options, {
-                    title = el.title,
-                    description = el.description,
-                    icon = el.icon,
-                    event = el.event,
-                    args = el.args
+            if not lib then return end
+            local formattedOptions = {}
+            for _, opt in ipairs(menuData.options or {}) do
+                table.insert(formattedOptions, {
+                    title = opt.title or opt.header,
+                    description = opt.description or opt.txt,
+                    icon = opt.icon,
+                    image = opt.image,
+                    menu = opt.menu,
+                    onSelect = opt.onSelect,
+                    event = opt.event or (opt.params and opt.params.event),
+                    args = opt.args or (opt.params and opt.params.args)
                 })
             end
             lib.registerContext({
-                id = id,
-                title = title,
-                options = options
+                id = menuData.id,
+                title = menuData.title or menuData.header,
+                options = formattedOptions
             })
+        end
+    end
+
+    -- Show a registered menu by ID
+    menu.show = function(id)
+        local menuType = sharedConfig.Menu
+        local registered = registeredMenus[id]
+
+        if menuType == 'ox_lib' then
+            if not lib then print('^3[Dank_Utils] Menu: ox_lib not found.^0') return end
             lib.showContext(id)
         elseif menuType == 'qb-menu' then
-            local menuData = {
+            if not registered then
+                print('^3[Dank_Utils] Menu: No registered menu found with id "' .. tostring(id) .. '".^0')
+                return
+            end
+            local qbMenuData = {
                 {
-                    header = title,
+                    header = registered.title or registered.header or id,
                     isMenuHeader = true,
                 }
             }
-            for _, el in pairs(elements) do
-                table.insert(menuData, {
-                    header = el.title,
-                    txt = el.description,
-                    icon = el.icon,
+            for _, opt in ipairs(registered.options or {}) do
+                local headerText = opt.title or opt.header or ''
+                if opt.image then
+                    headerText = headerText .. ' <img src="' .. opt.image .. '" alt="' .. headerText .. '">'
+                end
+                table.insert(qbMenuData, {
+                    header = headerText,
+                    txt = opt.description or opt.txt,
+                    icon = opt.icon,
                     params = {
-                        event = el.event,
-                        args = el.args
+                        event = opt.event or (opt.params and opt.params.event),
+                        args = opt.args or (opt.params and opt.params.args)
                     }
                 })
             end
-            exports['qb-menu']:openMenu(menuData)
+            exports['qb-menu']:openMenu(qbMenuData)
         elseif menuType == 'nh-context' or menuType == 'zf_context' then
-            local menuData = {
+            if not registered then return end
+            local contextData = {
                 {
-                    header = title,
+                    header = registered.title or registered.header or id,
                     isMenuHeader = true
                 }
             }
-            for _, el in pairs(elements) do
-                table.insert(menuData, {
-                    header = el.title,
-                    context = el.description,
-                    event = el.event,
-                    args = { el.args }
+            for _, opt in ipairs(registered.options or {}) do
+                table.insert(contextData, {
+                    header = opt.title or opt.header,
+                    context = opt.description or opt.txt,
+                    event = opt.event or (opt.params and opt.params.event),
+                    args = { opt.args or (opt.params and opt.params.args) }
                 })
             end
             if menuType == 'nh-context' then
-                TriggerEvent('nh-context:sendMenu', menuData)
+                TriggerEvent('nh-context:sendMenu', contextData)
             else
-                exports['zf_context']:openMenu(menuData)
+                exports['zf_context']:openMenu(contextData)
             end
-        elseif menuType == 'esx_menu_default' then
-            local ESX = exports['es_extended']:getSharedObject()
-            if not ESX then print('^3[Dank_Utils] Menu: ESX object not found for esx_menu_default.^0') return end
-            local esxElements = {}
-            for _, el in pairs(elements) do
-                table.insert(esxElements, {
-                    label = el.title,
-                    value = el.args,
-                    event = el.event
-                })
-            end
-            ESX.UI.Menu.Open('default', GetCurrentResourceName(), id, {
-                title = title,
-                align = 'top-left',
-                elements = esxElements
-            }, function(data, m)
-                if data.current.event then
-                    TriggerEvent(data.current.event, data.current.value)
-                end
-                m.close()
-            end, function(data, m)
-                m.close()
-            end)
         else
-            print('^3[Dank_Utils] Menu: Unsupported menu system ('..tostring(menuType)..') for open.^0')
+            print('^3[Dank_Utils] Menu: Unsupported or undetected menu system (' .. tostring(menuType) .. ') for show.^0')
         end
+    end
+
+    -- Close any open menu
+    menu.close = function()
+        local menuType = sharedConfig.Menu
+        if menuType == 'ox_lib' then
+            if lib then lib.hideContext() end
+        elseif menuType == 'qb-menu' then
+            exports['qb-menu']:closeMenu()
+        end
+    end
+
+    -- Open a menu directly on the fly
+    menu.open = function(id, title, elements)
+        menu.register({
+            id = id,
+            title = title,
+            options = elements
+        })
+        menu.show(id)
     end
 end
 
