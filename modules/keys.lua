@@ -1,20 +1,28 @@
--- ──────────────────────────────────────────────────────────────
 -- Dank_Utils :: keys.lua  (shared)
 -- Provides: Dank.keys.give(source, veh, plate), Dank.keys.remove(source, veh, plate)
--- ──────────────────────────────────────────────────────────────
 
+---@class DankKeys
 local keys = {}
 
 local sharedConfig = require 'config.dankutils_shared'
+local LogDebug = LogDebug
 
+---@return string
 local function getKeysScript()
     return sharedConfig.Keys or 'none'
 end
 
+---@param source integer|nil
+---@param veh integer|nil
+---@param plate string|nil
 keys.give = function(source, veh, plate)
-    if not source or not veh then return end
-    
+    if not source or not veh then
+        LogDebug('[keys] give skipped (missing source or vehicle)')
+        return
+    end
+
     local script = getKeysScript()
+    LogDebug(('[keys] give(source=%s, plate=%s) system=%s'):format(tostring(source), tostring(plate), tostring(script)))
 
     if IsDuplicityVersion() then
         -- SERVER
@@ -28,8 +36,8 @@ keys.give = function(source, veh, plate)
             exports['qs-vehiclekeys']:GiveKeys(source, plate)
         elseif script == 'mono_carlock' then
             TriggerClientEvent('mono_carlock:GiveKeys', source, plate)
-        elseif script == 'jg-advancedgarages' then
-            TriggerClientEvent('jg-advancedgarages:client:giveKey', source, plate)
+        elseif script == 'tupani_carlock' then
+            exports['tupani_carlock']:GiveKeys(source, plate)
         else
             -- Default fallback to qb-vehiclekeys style if framework is qb-core
             if sharedConfig.Framework == 'qb-core' then
@@ -45,10 +53,17 @@ keys.give = function(source, veh, plate)
     end
 end
 
+---@param source integer|nil
+---@param veh integer|nil
+---@param plate string|nil
 keys.remove = function(source, veh, plate)
-    if not source or not veh then return end
-    
+    if not source or not veh then
+        LogDebug('[keys] remove skipped (missing source or vehicle)')
+        return
+    end
+
     local script = getKeysScript()
+    LogDebug(('[keys] remove(source=%s, plate=%s) system=%s'):format(tostring(source), tostring(plate), tostring(script)))
 
     if IsDuplicityVersion() then
         -- SERVER
@@ -60,6 +75,8 @@ keys.remove = function(source, veh, plate)
             exports.wasabi_carlock:RemoveKey(source, plate)
         elseif script == 'qs-vehiclekeys' then
             exports['qs-vehiclekeys']:RemoveKeys(source, plate)
+        elseif script == 'tupani_carlock' then
+            exports['tupani_carlock']:RemoveKeys(source, plate)
         end
     else
         -- CLIENT

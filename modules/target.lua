@@ -7,12 +7,20 @@ local type = type
 local math = math
 
 local sharedConfig = require 'config.dankutils_shared'
+local LogDebug = LogDebug
+
+---@class DankTarget
 local target = {}
 
 if not IsDuplicityVersion() then
     -- CLIENT
     -- Abstracting adding a box zone
+    ---@param name string|table
+    ---@param coords? table
+    ---@param size? table
+    ---@param options? table
     target.addBoxZone = function(name, coords, size, options)
+        LogDebug(('[target] addBoxZone system=%s'):format(tostring(sharedConfig.Target)))
         local zoneName, zoneCoords, zoneSize, zoneOpts
         if type(name) == 'table' then
             zoneOpts = name
@@ -25,6 +33,8 @@ if not IsDuplicityVersion() then
             zoneSize = size
             zoneOpts = options or {}
         end
+        zoneSize = zoneSize or vec3(1.0, 1.0, 1.0)
+        zoneCoords = zoneCoords or vec3(0.0, 0.0, 0.0)
 
         local optionsList = zoneOpts.options or {}
         local rotation = zoneOpts.rotation or zoneOpts.heading or 0
@@ -90,7 +100,10 @@ if not IsDuplicityVersion() then
     end
 
     -- Abstracting adding an entity
+    ---@param entity integer
+    ---@param options table
     target.addEntity = function(entity, options)
+        LogDebug(('[target] addEntity system=%s'):format(tostring(sharedConfig.Target)))
         local targetType = sharedConfig.Target
         local opts = options or {}
         if targetType == 'ox_target' then
@@ -133,7 +146,10 @@ if not IsDuplicityVersion() then
     end
 
     -- Abstracting adding a model (NOW PROPERLY TOP-LEVEL, NOT NESTED!)
+    ---@param model string|number|table
+    ---@param options? table
     target.addModel = function(model, options)
+        LogDebug(('[target] addModel(model=%s) system=%s'):format(tostring(model), tostring(sharedConfig.Target)))
         local models, opts
         if type(model) == 'table' and not model[1] and model.model then
             models = model.model
@@ -184,7 +200,10 @@ if not IsDuplicityVersion() then
         end
     end
 
+    ---@param options table
+    ---@return string|nil
     target.addCircleZone = function(options)
+        LogDebug(('[target] addCircleZone system=%s'):format(tostring(sharedConfig.Target)))
         local targetType = sharedConfig.Target
         if targetType == 'ox_target' then
             return exports.ox_target:addSphereZone({
@@ -193,13 +212,14 @@ if not IsDuplicityVersion() then
                 debug = options.debugPoly or false,
                 options = { options.options }
             })
-        elseif targetType == 'qb-target' then
+        elseif targetType == 'qb-target' or targetType == 'qtarget' then
+            local targetExport = targetType == 'qb-target' and exports['qb-target'] or exports.qtarget
             local qbOptions = {}
             local opt = options.options or {}
             qbOptions[1] = {}
             for k, v in pairs(opt) do qbOptions[1][k] = v end
             if not qbOptions[1].type then qbOptions[1].type = 'client' end
-            exports['qb-target']:AddCircleZone(options.name, options.coords, options.radius or 1.0, {
+            targetExport:AddCircleZone(options.name, options.coords, options.radius or 1.0, {
                 name = options.name,
                 debugPoly = options.debugPoly or false,
                 useZ = true
@@ -211,50 +231,67 @@ if not IsDuplicityVersion() then
         end
     end
 
+    ---@param zoneId string
     target.removeZone = function(zoneId)
+        LogDebug(('[target] removeZone(id=%s) system=%s'):format(tostring(zoneId), tostring(sharedConfig.Target)))
         local targetType = sharedConfig.Target
         if targetType == 'ox_target' then
             exports.ox_target:removeZone(zoneId)
         elseif targetType == 'qb-target' then
             exports['qb-target']:RemoveZone(zoneId)
+        elseif targetType == 'qtarget' then
+            exports.qtarget:RemoveZone(zoneId)
         end
     end
 
+    ---@param options table
     target.addGlobalVehicle = function(options)
+        LogDebug(('[target] addGlobalVehicle system=%s'):format(tostring(sharedConfig.Target)))
         local targetType = sharedConfig.Target
         if targetType == 'ox_target' then
             exports.ox_target:addGlobalVehicle(options)
-        elseif targetType == 'qb-target' then
+        elseif targetType == 'qb-target' or targetType == 'qtarget' then
+            local targetExport = targetType == 'qb-target' and exports['qb-target'] or exports.qtarget
             local qbOptions = {}
             for i, opt in ipairs(options or {}) do
                 qbOptions[i] = {}
                 for k, v in pairs(opt) do qbOptions[i][k] = v end
                 if not qbOptions[i].type then qbOptions[i].type = 'client' end
             end
-            exports['qb-target']:AddGlobalVehicle({
+            targetExport:AddGlobalVehicle({
                 options = qbOptions,
                 distance = 2.5
             })
         end
     end
 
+    ---@param options table
     target.addGlobalOption = function(options)
+        LogDebug(('[target] addGlobalOption system=%s'):format(tostring(sharedConfig.Target)))
         local targetType = sharedConfig.Target
         if targetType == 'ox_target' then
             exports.ox_target:addGlobalOption(options)
-        elseif targetType == 'qb-target' then
-            print('^3[Dank_Utils] addGlobalOption is not natively supported in qb-target.^0')
+        elseif targetType == 'qb-target' or targetType == 'qtarget' then
+            print('^3[Dank_Utils] addGlobalOption is not natively supported in qb-target/qtarget.^0')
         end
     end
 
+    ---@param entity integer
     target.removeLocalEntity = function(entity)
+        LogDebug(('[target] removeLocalEntity system=%s'):format(tostring(sharedConfig.Target)))
         local targetType = sharedConfig.Target
         if targetType == 'ox_target' then
             exports.ox_target:removeLocalEntity(entity)
         elseif targetType == 'qb-target' then
             exports['qb-target']:RemoveTargetEntity(entity)
+        elseif targetType == 'qtarget' then
+            exports.qtarget:RemoveTargetEntity(entity)
         end
     end
+
+    -- Aliases for flexibility across target scripts
+    target.addLocalEntity = target.addEntity
+    target.removeEntity = target.removeLocalEntity
 end
 
 return target

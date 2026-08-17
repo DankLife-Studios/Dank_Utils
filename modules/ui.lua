@@ -6,12 +6,20 @@ local print = print
 local Wait = Wait
 
 local sharedConfig = require 'config.dankutils_shared'
+local LogDebug = LogDebug
+
+---@class DankUi
 local ui = {}
 
 if IsDuplicityVersion() then
     -- SERVER
+    ---@param source integer
+    ---@param message string
+    ---@param messageType? string
+    ---@param timeLength? number
     ui.notify = function(source, message, messageType, timeLength)
         local time = timeLength or 5000
+        LogDebug(('[ui] notify(source=%s, type=%s) framework=%s'):format(tostring(source), tostring(messageType), tostring(sharedConfig.Framework)))
         if sharedConfig.Framework == 'qbx_core' then
             exports.qbx_core:Notify(source, message, messageType, time)
         elseif sharedConfig.Framework == 'qb-core' then
@@ -21,13 +29,18 @@ if IsDuplicityVersion() then
         elseif sharedConfig.Framework == 'ND_Core' or sharedConfig.Framework == 'ox_core' then
             TriggerClientEvent('ox_lib:notify', source, { description = message, type = messageType })
         else
+            LogDebug('[ui] notify: chat fallback (no framework detected)')
             TriggerClientEvent('chat:addMessage', source, { args = {message} })
         end
     end
 else
     -- CLIENT
+    ---@param message string
+    ---@param type string
+    ---@param timeLength? number
     ui.notify = function(message, type, timeLength)
         local time = timeLength or 5000
+        LogDebug(('[ui] notify(type=%s) framework=%s'):format(tostring(type), tostring(sharedConfig.Framework)))
         if sharedConfig.Framework == 'qbx_core' then
             exports.qbx_core:Notify(message, type, time)
         elseif sharedConfig.Framework == 'qb-core' then
@@ -47,6 +60,7 @@ else
     end
 
     ui.toggleDuty = function()
+        LogDebug('[ui] toggleDuty called')
         if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
             TriggerServerEvent("QBCore:ToggleDuty")
         elseif sharedConfig.Framework == 'es_extended' then
@@ -56,6 +70,7 @@ else
         end
     end
 
+    ---@param params table
     ui.progressbar = function(params)
         local framework = sharedConfig.Framework
         local name = params.name or 'progress'
@@ -69,8 +84,8 @@ else
         local onFinish = params.onFinish or function() end
         local onCancel = params.onCancel or function() end
 
-        if framework == 'qbx_core' or framework == 'ND_Core' or framework == 'ox_core' then
-            if not lib then print('^3[Dank_Utils] Progressbar: ox_lib not found.^0') return end
+        if lib and lib.progressBar then
+            LogDebug(('[ui] progressbar(%s) using ox_lib'):format(tostring(label)))
             local options = {
                 duration = duration,
                 label = label,
@@ -81,18 +96,20 @@ else
                 prop = prop,
             }
             if lib.progressBar(options) then onFinish() else onCancel() end
-        elseif framework == 'qb-core' then
-            local core = exports['qb-core']:GetCoreObject()
-            if core then
+        elseif framework == 'qb-core' or framework == 'qbx_core' then
+            LogDebug(('[ui] progressbar(%s) using framework Progressbar'):format(tostring(label)))
+            local core = exports['qb-core'] and exports['qb-core']:GetCoreObject()
+            if core and core.Functions and core.Functions.Progressbar then
                 core.Functions.Progressbar(name, label, duration, useWhileDead, canCancel, disableControls, animation, prop, nil, onFinish, onCancel)
+            else
+                Wait(duration)
+                onFinish()
             end
-        elseif framework == 'es_extended' then
-            print('^3[Dank_Utils] Progressbar: ESX progress bar not natively supported, using chat fallback.^0')
-            ui.notify(label .. ' in progress...', 'info', duration)
+        else
+            LogDebug(('[ui] progressbar(%s) timed fallback (no progress system)'):format(tostring(label)))
+            ui.notify(label .. '...', 'info', duration)
             Wait(duration)
             onFinish()
-        else
-            print('^3[Dank_Utils] Progressbar: No framework detected.^0')
         end
     end
 end

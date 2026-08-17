@@ -1,31 +1,32 @@
--- ──────────────────────────────────────────────────────────────
 -- Dank_Utils :: fuel.lua  (shared)
 -- Provides: Dank.fuel.set(veh, level), Dank.fuel.get(veh)
--- ──────────────────────────────────────────────────────────────
 
+---@class DankFuel
 local fuel = {}
 
 local sharedConfig = require 'config.dankutils_shared'
+local LogDebug = LogDebug
 
--- ──────────────────────────────────────────────────────────────
 -- Internal helper: resolve the active fuel script name
--- ──────────────────────────────────────────────────────────────
+---@return string
 local function getFuelScript()
     return sharedConfig.Fuel or 'none'
 end
 
--- ──────────────────────────────────────────────────────────────
 -- Dank.fuel.set(veh, level)
 -- Sets the fuel level of a vehicle. level is 0.0 – 100.0.
--- ──────────────────────────────────────────────────────────────
+---@param veh integer
+---@param level number
 fuel.set = function(veh, level)
     if not veh or not DoesEntityExist(veh) then
+        LogDebug('[fuel] set: invalid vehicle entity')
         print('^3[Dank_Utils] fuel.set: invalid vehicle entity^0')
         return
     end
 
     level = math.max(0.0, math.min(100.0, tonumber(level) or 100.0))
     local script = getFuelScript()
+    LogDebug(('[fuel] set(level=%s) script=%s side=%s'):format(tostring(level), tostring(script), IsDuplicityVersion() and 'server' or 'client'))
 
     if IsDuplicityVersion() then
         -- SERVER
@@ -42,6 +43,8 @@ fuel.set = function(veh, level)
         -- CLIENT
         if script == 'ox_fuel' then
             Entity(veh).state.fuel = level
+        elseif script == 'cdn-fuel' then
+            exports['cdn-fuel']:SetFuel(veh, level)
         elseif script == 'ti_fuel' then
             TriggerEvent('ti_fuel:setFuel', veh, level)
         elseif script == 'LegacyFuel' then
@@ -52,22 +55,25 @@ fuel.set = function(veh, level)
             exports['ps-fuel']:SetFuel(veh, level)
         else
             -- Native fallback (no fuel script detected)
+            LogDebug('[fuel] set: native fallback (no fuel script detected)')
             SetVehicleFuelLevel(veh, level)
         end
     end
 end
 
--- ──────────────────────────────────────────────────────────────
 -- Dank.fuel.get(veh)
 -- Returns the current fuel level of a vehicle (0.0 – 100.0).
--- ──────────────────────────────────────────────────────────────
+---@param veh integer
+---@return number
 fuel.get = function(veh)
     if not veh or not DoesEntityExist(veh) then
+        LogDebug('[fuel] get: invalid vehicle entity')
         print('^3[Dank_Utils] fuel.get: invalid vehicle entity^0')
         return 0.0
     end
 
     local script = getFuelScript()
+    LogDebug(('[fuel] get script=%s side=%s'):format(tostring(script), IsDuplicityVersion() and 'server' or 'client'))
 
     if IsDuplicityVersion() then
         -- SERVER
@@ -82,6 +88,8 @@ fuel.get = function(veh)
         -- CLIENT
         if script == 'ox_fuel' then
             return Entity(veh).state.fuel or GetVehicleFuelLevel(veh)
+        elseif script == 'cdn-fuel' then
+            return exports['cdn-fuel']:GetFuel(veh)
         elseif script == 'ti_fuel' then
             if DecorExistOn(veh, 'fuel_level') then
                 return DecorGetFloat(veh, 'fuel_level')
@@ -94,6 +102,7 @@ fuel.get = function(veh)
         elseif script == 'ps-fuel' then
             return exports['ps-fuel']:GetFuel(veh)
         else
+            LogDebug('[fuel] get: native fallback (no fuel script detected)')
             return GetVehicleFuelLevel(veh)
         end
     end
