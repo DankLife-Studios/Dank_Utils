@@ -9,7 +9,7 @@
 ---@class DankGarage
 local garage = {}
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@return string
 local function getGarageScript()
@@ -45,8 +45,8 @@ if IsDuplicityVersion() then
                     exports['jg-advancedgarages']:registerVehicleOutside(plate, netId, model, garageId)
                 end
             elseif script == 'qs-advancedgarages' or script == 'qs-garage' then
-                if exports['qs-advancedgarages'] and exports['qs-advancedgarages'].registerVehicleOutside then
-                    exports['qs-advancedgarages']:registerVehicleOutside(plate, netId)
+                if exports[script] and exports[script].registerVehicleOutside then
+                    exports[script]:registerVehicleOutside(plate, netId)
                 end
             elseif script == 'okokGarage' then
                 if exports['okokGarage'] and exports['okokGarage'].SetVehicleOut then
@@ -81,8 +81,8 @@ if IsDuplicityVersion() then
                     exports['jg-advancedgarages']:deleteOutsideVehicle(plate)
                 end
             elseif script == 'qs-advancedgarages' or script == 'qs-garage' then
-                if exports['qs-advancedgarages'] and exports['qs-advancedgarages'].deleteOutsideVehicle then
-                    exports['qs-advancedgarages']:deleteOutsideVehicle(plate)
+                if exports[script] and exports[script].deleteOutsideVehicle then
+                    exports[script]:deleteOutsideVehicle(plate)
                 end
             elseif script == 'okokGarage' then
                 if exports['okokGarage'] and exports['okokGarage'].SetVehicleIn then
@@ -137,8 +137,8 @@ if IsDuplicityVersion() then
                     exports['rcore_garage']:StoreVehicle(vehicleEntity)
                 end
             elseif script == 'qs-advancedgarages' or script == 'qs-garage' then
-                if exports['qs-advancedgarages'] and exports['qs-advancedgarages'].StoreVehicle then
-                    exports['qs-advancedgarages']:StoreVehicle(source, vehicleEntity)
+                if exports[script] and exports[script].StoreVehicle then
+                    exports[script]:StoreVehicle(source, vehicleEntity)
                 end
             end
         end)
@@ -236,8 +236,8 @@ if IsDuplicityVersion() then
                     result = exports['okokGarage']:GetGarages()
                 end
             elseif script == 'qs-advancedgarages' or script == 'qs-garage' then
-                if exports['qs-advancedgarages'] and exports['qs-advancedgarages'].getAllGarages then
-                    result = exports['qs-advancedgarages']:getAllGarages()
+                if exports[script] and exports[script].getAllGarages then
+                    result = exports[script]:getAllGarages()
                 end
             end
         end)
@@ -264,8 +264,8 @@ else
                     exports['jg-advancedgarages']:registerVehicleOutside(plate, netId, model, garageId)
                 end
             elseif script == 'qs-advancedgarages' or script == 'qs-garage' then
-                if exports['qs-advancedgarages'] and exports['qs-advancedgarages'].registerVehicleOutside then
-                    exports['qs-advancedgarages']:registerVehicleOutside(plate, netId)
+                if exports[script] and exports[script].registerVehicleOutside then
+                    exports[script]:registerVehicleOutside(plate, netId)
                 end
             end
         end)
@@ -284,8 +284,8 @@ else
                     exports['jg-advancedgarages']:deleteOutsideVehicle(plate)
                 end
             elseif script == 'qs-advancedgarages' or script == 'qs-garage' then
-                if exports['qs-advancedgarages'] and exports['qs-advancedgarages'].deleteOutsideVehicle then
-                    exports['qs-advancedgarages']:deleteOutsideVehicle(plate)
+                if exports[script] and exports[script].deleteOutsideVehicle then
+                    exports[script]:deleteOutsideVehicle(plate)
                 end
             end
         end)
@@ -309,7 +309,7 @@ else
             elseif script == 'cd_garage' then
                 TriggerEvent('cd_garage:StoreVehicle')
             elseif script == 'okokGarage' then
-                if exports['okokGarage'] and exports['okokGarage'].StoreVehicle then
+                if veh and DoesEntityExist(veh) and exports['okokGarage'] and exports['okokGarage'].StoreVehicle then
                     local plate = GetVehicleNumberPlateText(veh)
                     exports['okokGarage']:StoreVehicle(plate, garageId)
                 end
@@ -318,8 +318,8 @@ else
                     exports['rcore_garage']:StoreVehicle(veh)
                 end
             elseif script == 'qs-advancedgarages' or script == 'qs-garage' then
-                if exports['qs-advancedgarages'] and exports['qs-advancedgarages'].StoreVehicle then
-                    exports['qs-advancedgarages']:StoreVehicle(veh)
+                if exports[script] and exports[script].StoreVehicle then
+                    exports[script]:StoreVehicle(veh)
                 end
             end
         end)
@@ -332,6 +332,7 @@ else
     ---@param fee number|nil
     garage.impoundVehicle = function(plate, impoundName, reason, fee)
         local script = getGarageScript()
+        LogDebug(('[garage] impoundVehicle(plate=%s, impound=%s, fee=%s) system=%s [client]'):format(tostring(plate), tostring(impoundName), tostring(fee), tostring(script)))
 
         safeCall(function()
             if script == 'jg-advancedgarages' then

@@ -5,7 +5,7 @@ local tonumber = tonumber
 local type = type
 
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@class DankCore
 local core = {}
@@ -15,7 +15,9 @@ local core = {}
 core.getFunctions = function()
     LogDebug(('[core] getFunctions framework=%s'):format(tostring(sharedConfig.Framework)))
     if sharedConfig.Framework == 'qbx_core' then return exports.qbx_core
-    elseif sharedConfig.Framework == 'qb-core' then return exports['qb-core']:GetCoreObject().Functions 
+    elseif sharedConfig.Framework == 'qb-core' then
+        local qb = GetResourceState('qb-core') == 'started' and exports['qb-core']:GetCoreObject()
+        return qb and qb.Functions
     elseif sharedConfig.Framework == 'es_extended' then return exports['es_extended']:getSharedObject()
     elseif sharedConfig.Framework == 'ND_Core' then return exports["ND_Core"]
     elseif sharedConfig.Framework == 'ox_core' then return exports.ox_core
@@ -136,7 +138,7 @@ if IsDuplicityVersion() then
         if major then
             return tonumber(major) * 10000
         end
-        return tonumber(version) or 0
+        return tonumber(version)
     end
 
     -- Reusable Version Checker
@@ -154,8 +156,9 @@ if IsDuplicityVersion() then
         elseif type(options) == 'table' then
             originalName = options.originalScriptName or originalName
             updateURL = options.updateURL or updateURL
-            checkInterval = options.checkInterval or checkInterval
+            checkInterval = tonumber(options.checkInterval) or checkInterval
         end
+        checkInterval = math.max(1000, checkInterval)
         local cachedRemoteVersion = nil
         local lastReportedState = nil
 
@@ -214,8 +217,8 @@ if IsDuplicityVersion() then
                 else
                     PerformHttpRequest(updateURL, function(err, text, headers)
                         if err == 200 and text then
-                            local jsonData = json.decode(text)
-                            if jsonData then
+                            local ok, jsonData = pcall(json.decode, text)
+                            if ok and jsonData then
                                 if jsonData[originalName] then
                                     cachedRemoteVersion = jsonData[originalName]
                                     reportComparison(curVer, cachedRemoteVersion)
@@ -232,6 +235,8 @@ if IsDuplicityVersion() then
                         else
                             if cachedRemoteVersion then
                                 reportComparison(curVer, cachedRemoteVersion)
+                            else
+                                reportComparison(curVer, nil)
                             end
                         end
                     end, "GET")
@@ -243,6 +248,7 @@ if IsDuplicityVersion() then
 
     ---@param cb function
     core.onPlayerLoaded = function(cb)
+        if type(cb) ~= 'function' then return end
         LogDebug(('[core] onPlayerLoaded framework=%s (Server)'):format(tostring(sharedConfig.Framework)))
         local function wrapCb(...)
             local src = source
@@ -281,6 +287,7 @@ else
     -- CLIENT
     ---@param cb function
     core.onPlayerLoaded = function(cb)
+        if type(cb) ~= 'function' then return end
         LogDebug(('[core] onPlayerLoaded framework=%s'):format(tostring(sharedConfig.Framework)))
         if sharedConfig.Framework == 'qbx_core' then
             AddEventHandler('qbx_core:client:playerLoaded', cb)

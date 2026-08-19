@@ -8,13 +8,11 @@ local tostring = tostring
 local table = table
 
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local playerModule = require 'modules.player'
+local LogDebug = LogDebug or function() end
 
 ---@class DankInventory
 local inventory = {}
----@type Dank
-local Dank = Dank or _G.Dank -- Reference the global Dank object if needed
-
 if IsDuplicityVersion() then
     -- SERVER
     ---@param source integer
@@ -34,18 +32,18 @@ if IsDuplicityVersion() then
     ---@return table[]
     inventory.getInventoryItems = function(source)
         LogDebug(('[inventory] getInventoryItems(source=%s) system=%s'):format(tostring(source), tostring(sharedConfig.Inventory)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return exports.ox_inventory:GetInventoryItems(source) or {}
-        elseif sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
-            local Player = Dank.player.get(source)
+        elseif sharedConfig.Framework == 'qb-core' then
+            local Player = playerModule.get(source)
             if not Player then return {} end
             return Player.PlayerData.items or {}
         elseif sharedConfig.Framework == 'es_extended' then
-            local Player = Dank.player.get(source)
+            local Player = playerModule.get(source)
             if not Player then return {} end
             return Player.getInventory(false) or {}
         end
-        return exports.ox_inventory:GetInventoryItems(source) or {}
+        return {}
     end
 
     ---@param source integer
@@ -54,17 +52,19 @@ if IsDuplicityVersion() then
     ---@return boolean
     inventory.setMetadata = function(source, slot, metadata)
         LogDebug(('[inventory] setMetadata(source=%s, slot=%s) system=%s'):format(tostring(source), tostring(slot), tostring(sharedConfig.Inventory)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return exports.ox_inventory:SetMetadata(source, slot, metadata)
-        elseif sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
-            local Player = Dank.player.get(source)
-            if not Player or not Player.PlayerData.items[slot] then return false end
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            return exports['qs-inventory']:SetItemMetadata(source, slot, metadata)
+        elseif sharedConfig.Framework == 'qb-core' then
+            local Player = playerModule.get(source)
+            if not Player or not Player.PlayerData or not Player.PlayerData.items or not Player.PlayerData.items[slot] then return false end
             Player.PlayerData.items[slot].info = metadata
             Player.PlayerData.items[slot].metadata = metadata
             Player.Functions.SetPlayerData("items", Player.PlayerData.items)
             return true
         end
-        return exports.ox_inventory:SetMetadata(source, slot, metadata)
+        return false
     end
 
     ---@param source integer
@@ -75,22 +75,24 @@ if IsDuplicityVersion() then
     ---@return boolean
     inventory.addItem = function(source, item, amount, slot, metadata)
         LogDebug(('[inventory] addItem(source=%s, item=%s, amount=%s)'):format(tostring(source), tostring(item), tostring(amount)))
-        local Player = Dank.player.get(source)
-        if not Player then return false end
         amount = tonumber(amount) or 1
+        if amount <= 0 then return false end
 
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return exports.ox_inventory:AddItem(source, item, amount, metadata, slot)
         elseif sharedConfig.Inventory == 'origen_inventory' then
             return exports['origen_inventory']:AddItem(source, item, amount, slot, metadata)
         elseif sharedConfig.Inventory == 'qs-inventory' then
             return exports['qs-inventory']:AddItem(source, item, amount, slot, metadata)
-        elseif sharedConfig.Framework == 'qbx_core' then
-            return exports.qbx_core:AddItem(source, item, amount, slot, metadata)
         elseif sharedConfig.Framework == 'qb-core' then
-            handleItemNotification(source, item, 'add', amount)
-            return Player.Functions.AddItem(item, amount, slot, metadata)
+            local Player = playerModule.get(source)
+            if not Player then return false end
+            local added = Player.Functions.AddItem(item, amount, slot, metadata)
+            if added then handleItemNotification(source, item, 'add', amount) end
+            return added
         elseif sharedConfig.Framework == 'es_extended' then
+            local Player = playerModule.get(source)
+            if not Player then return false end
             handleItemNotification(source, item, 'add', amount)
             Player.addInventoryItem(item, amount)
             return true
@@ -106,22 +108,24 @@ if IsDuplicityVersion() then
     ---@return boolean
     inventory.removeItem = function(source, item, amount, slot, metadata)
         LogDebug(('[inventory] removeItem(source=%s, item=%s, amount=%s)'):format(tostring(source), tostring(item), tostring(amount)))
-        local Player = Dank.player.get(source)
-        if not Player then return false end
         amount = tonumber(amount) or 1
+        if amount <= 0 then return false end
 
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return exports.ox_inventory:RemoveItem(source, item, amount, metadata, slot)
         elseif sharedConfig.Inventory == 'origen_inventory' then
-            return exports['origen_inventory']:RemoveItem(source, item, amount, slot)
+            return exports['origen_inventory']:RemoveItem(source, item, amount, slot, metadata)
         elseif sharedConfig.Inventory == 'qs-inventory' then
-            return exports['qs-inventory']:RemoveItem(source, item, amount, slot)
-        elseif sharedConfig.Framework == 'qbx_core' then
-            return exports.qbx_core:RemoveItem(source, item, amount, slot, metadata)
+            return exports['qs-inventory']:RemoveItem(source, item, amount, slot, metadata)
         elseif sharedConfig.Framework == 'qb-core' then
-            handleItemNotification(source, item, 'remove', amount)
-            return Player.Functions.RemoveItem(item, amount, slot)
+            local Player = playerModule.get(source)
+            if not Player then return false end
+            local removed = Player.Functions.RemoveItem(item, amount, slot)
+            if removed then handleItemNotification(source, item, 'remove', amount) end
+            return removed
         elseif sharedConfig.Framework == 'es_extended' then
+            local Player = playerModule.get(source)
+            if not Player then return false end
             handleItemNotification(source, item, 'remove', amount)
             Player.removeInventoryItem(item, amount)
             return true
@@ -134,13 +138,57 @@ if IsDuplicityVersion() then
     ---@return table|nil
     inventory.getItemByName = function(source, item)
         LogDebug(('[inventory] getItemByName(source=%s, item=%s)'):format(tostring(source), tostring(item)))
-        local Player = Dank.player.get(source)
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
+            return exports.ox_inventory:GetSlotWithItem(source, item)
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            local items = exports['qs-inventory']:GetInventory(source) or {}
+            for _, itemData in pairs(items) do
+                if itemData.name == item then return itemData end
+            end
+            return nil
+        end
+
+        local Player = playerModule.get(source)
         if not Player then return nil end
-        if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
+        if sharedConfig.Framework == 'qb-core' then
             return Player.Functions.GetItemByName(item)
         elseif sharedConfig.Framework == 'es_extended' then
             return Player.getInventoryItem(item)
         end
+    end
+
+    ---Register a named ox_inventory server export and normalize its item data.
+    ---Returns false when ox_inventory is not the active inventory so callers
+    ---can fall back to framework-specific usable-item registration.
+    ---@param exportName string
+    ---@param callback function
+    ---@return boolean
+    inventory.registerUseItemExport = function(exportName, callback)
+        local usesOxInventory = sharedConfig.Inventory == 'ox_inventory'
+            or sharedConfig.Framework == 'qbx_core'
+
+        if not usesOxInventory then return false end
+
+        LogDebug(('[inventory] registerUseItemExport(export=%s)'):format(tostring(exportName)))
+        exports(exportName, function(event, itemData, inv, slot, data)
+            if event ~= 'usingItem' then return end
+            if not inv or not inv.id or not slot then return false end
+
+            local slotData = inv.items and inv.items[slot]
+            local metadata = slotData and slotData.metadata
+            local normalizedItem = {
+                name = (slotData and slotData.name) or (itemData and itemData.name),
+                label = (slotData and slotData.label) or (itemData and itemData.label),
+                count = slotData and slotData.count,
+                slot = slot,
+                metadata = metadata,
+                info = metadata,
+            }
+
+            return callback(inv.id, normalizedItem, event, data)
+        end)
+
+        return true
     end
 
     ---@param item string
@@ -178,10 +226,13 @@ if IsDuplicityVersion() then
     ---@return boolean
     inventory.canCarryItem = function(source, item, amount)
         LogDebug(('[inventory] canCarryItem(source=%s, item=%s, amount=%s)'):format(tostring(source), tostring(item), tostring(amount)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        amount = tonumber(amount) or 1
+        if amount <= 0 then return false end
+
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return exports.ox_inventory:CanCarryItem(source, item, amount)
-        elseif sharedConfig.Framework == 'qbx_core' then
-            return exports.qbx_core:CanCarryItem(source, item, amount)
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            return exports['qs-inventory']:CanCarryItem(source, item, amount)
         elseif sharedConfig.Framework == 'qb-core' then
             local QBCore = exports['qb-core']:GetCoreObject()
             local Player = QBCore.Functions.GetPlayer(source)
@@ -200,7 +251,7 @@ if IsDuplicityVersion() then
             
             return (currentTotalWeight + itemWeight) <= maxWeight
         elseif sharedConfig.Framework == 'es_extended' then
-            local Player = Dank.player.get(source)
+            local Player = playerModule.get(source)
             if not Player then return false end
             return Player.canCarryItem(item, amount)
         end
@@ -213,10 +264,16 @@ if IsDuplicityVersion() then
     ---@return table[]
     inventory.getItemsByName = function(source, item)
         LogDebug(('[inventory] getItemsByName(source=%s, item=%s) system=%s'):format(tostring(source), tostring(item), tostring(sharedConfig.Inventory)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return exports.ox_inventory:Search(source, 'slots', item) or {}
-        elseif sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
-            local core = sharedConfig.Framework == 'qbx_core' and exports.qbx_core:GetCoreObject() or exports['qb-core']:GetCoreObject()
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            local items = {}
+            for _, invItem in pairs(exports['qs-inventory']:GetInventory(source) or {}) do
+                if invItem.name == item then table.insert(items, invItem) end
+            end
+            return items
+        elseif sharedConfig.Framework == 'qb-core' then
+            local core = exports['qb-core']:GetCoreObject()
             local ply = core.Functions.GetPlayer(source)
             if not ply then return {} end
             local items = {}
@@ -246,10 +303,12 @@ if IsDuplicityVersion() then
     ---@return number
     inventory.getItemCount = function(source, item)
         LogDebug(('[inventory] getItemCount(source=%s, item=%s) system=%s'):format(tostring(source), tostring(item), tostring(sharedConfig.Inventory)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return exports.ox_inventory:Search(source, 'count', item) or 0
-        elseif sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
-            local core = sharedConfig.Framework == 'qbx_core' and exports.qbx_core:GetCoreObject() or exports['qb-core']:GetCoreObject()
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            return exports['qs-inventory']:GetItemTotalAmount(source, item) or 0
+        elseif sharedConfig.Framework == 'qb-core' then
+            local core = exports['qb-core']:GetCoreObject()
             local ply = core.Functions.GetPlayer(source)
             if not ply then return 0 end
             local count = 0
@@ -280,19 +339,22 @@ if IsDuplicityVersion() then
     ---@return boolean
     inventory.hasItem = function(source, item, amount)
         LogDebug(('[inventory] hasItem(source=%s, item=%s, amount=%s)'):format(tostring(source), tostring(item), tostring(amount)))
-        local Player = Dank.player.get(source)
+        amount = tonumber(amount) or 1
+        if amount <= 0 then return false end
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
+            local count = exports.ox_inventory:Search(source, 'count', item) or 0
+            return count >= amount
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            return (exports['qs-inventory']:GetItemTotalAmount(source, item) or 0) >= amount
+        end
+
+        local Player = playerModule.get(source)
         if not Player then return false end
-        if sharedConfig.Framework == 'qbx_core' then
-            if sharedConfig.Inventory == 'ox_inventory' then
-                local count = exports.ox_inventory:Search(source, 'count', item) or 0
-                return count >= amount
-            end
-            return Player.Functions.HasItem(item, amount)
-        elseif sharedConfig.Framework == 'qb-core' then
+        if sharedConfig.Framework == 'qb-core' then
             return Player.Functions.HasItem(item, amount)
         elseif sharedConfig.Framework == 'es_extended' then
             local itemData = Player.getInventoryItem(item)
-            return itemData and itemData.count >= amount
+            return itemData and (itemData.count or itemData.amount or 0) >= amount or false
         end
         return false
     end
@@ -301,9 +363,11 @@ if IsDuplicityVersion() then
     ---@return table[]
     inventory.getStashItems = function(stashId)
         LogDebug(('[inventory] getStashItems(stash=%s) system=%s'):format(tostring(stashId), tostring(sharedConfig.Inventory)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return exports.ox_inventory:GetInventoryItems(stashId) or {}
-        elseif sharedConfig.Inventory == 'qb-inventory' or sharedConfig.Inventory == 'ps-inventory' or sharedConfig.Inventory == 'qs-inventory' then
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            return exports['qs-inventory']:GetStashItems(stashId) or {}
+        elseif sharedConfig.Inventory == 'qb-inventory' or sharedConfig.Inventory == 'ps-inventory' then
             -- Note: QBCore/PS/QS typically fetch stash from DB if not loaded. This is a simplified wrapper.
             if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
                 local result = MySQL.Sync.fetchAll('SELECT items FROM stashitems WHERE stash = ?', {stashId})
@@ -322,13 +386,17 @@ if IsDuplicityVersion() then
     ---@param weight number
     ---@param owner? string|number|boolean
     ---@param groups? table
-    inventory.registerStash = function(id, label, slots, weight, owner, groups)
+    ---@param playerSource? integer Required by the qs-inventory server export
+    inventory.registerStash = function(id, label, slots, weight, owner, groups, playerSource)
         LogDebug(('[inventory] registerStash(id=%s, label=%s) system=%s'):format(tostring(id), tostring(label), tostring(sharedConfig.Inventory)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             exports.ox_inventory:RegisterStash(id, label, slots, weight, owner, groups)
         elseif sharedConfig.Inventory == 'qs-inventory' then
-            exports['qs-inventory']:RegisterStash(source, id, slots, weight)
+            playerSource = tonumber(playerSource) or tonumber(source)
+            if not playerSource then return false end
+            return exports['qs-inventory']:RegisterStash(playerSource, id, slots, weight)
         end
+        return true
     end
 
     ---@param name string
@@ -338,7 +406,7 @@ if IsDuplicityVersion() then
     ---@param groups? table
     inventory.registerShop = function(name, label, items, locations, groups)
         LogDebug(('[inventory] registerShop(name=%s, label=%s) system=%s'):format(tostring(name), tostring(label), tostring(sharedConfig.Inventory)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             exports.ox_inventory:RegisterShop(name, {
                 name = label,
                 inventory = items,
@@ -353,7 +421,7 @@ if IsDuplicityVersion() then
     ---@param coords table
     inventory.customDrop = function(id, items, coords)
         LogDebug(('[inventory] customDrop(id=%s) system=%s'):format(tostring(id), tostring(sharedConfig.Inventory)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             exports.ox_inventory:CustomDrop(id, items, coords)
         end
     end
@@ -374,7 +442,7 @@ else
                 maxweight = maxweight,
                 slots = slots,
             })
-        elseif sharedConfig.Inventory == 'ox_inventory' then
+        elseif sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             exports.ox_inventory:openInventory('stash', { id = stashName })
         elseif sharedConfig.Inventory == 'qs-inventory' then
             local other = { maxweight = maxweight, slots = slots }
@@ -401,7 +469,7 @@ else
     ---@param metadata table
     inventory.displayMetadata = function(metadata)
         LogDebug(('[inventory] displayMetadata system=%s [client]'):format(tostring(sharedConfig.Inventory)))
-        if sharedConfig.Inventory == 'ox_inventory' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             if GetResourceState('ox_inventory') == 'started' then
                 exports.ox_inventory:displayMetadata(metadata)
             else
@@ -421,7 +489,7 @@ else
             return 'nui://qb-inventory/html/images/'
         elseif inv == 'ps-inventory' then
             return 'nui://ps-inventory/html/images/'
-        elseif inv == 'ox_inventory' then
+        elseif inv == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return 'nui://ox_inventory/web/images/'
         elseif inv == 'qs-inventory' then
             return 'nui://qs-inventory/html/images/'
@@ -460,6 +528,8 @@ else
         if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             local count = exports.ox_inventory:Search('count', item)
             return count or 0
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            return exports['qs-inventory']:Search(item) or 0
         elseif sharedConfig.Framework == 'qb-core' then
             local core = exports['qb-core']:GetCoreObject()
             local plyData = core and core.Functions.GetPlayerData()
@@ -494,6 +564,12 @@ else
         if not item then return {} end
         if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             return exports.ox_inventory:Search('slots', item) or {}
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            local items = {}
+            for _, invItem in pairs(exports['qs-inventory']:getUserInventory() or {}) do
+                if invItem and invItem.name == item then table.insert(items, invItem) end
+            end
+            return items
         elseif sharedConfig.Framework == 'qb-core' then
             local core = exports['qb-core']:GetCoreObject()
             local plyData = core and core.Functions.GetPlayerData()
@@ -523,11 +599,14 @@ else
     ---@param rAmount? number
     ---@return boolean
     inventory.hasItem = function(item, rAmount)
-        local amount = rAmount or 1
+        local amount = tonumber(rAmount) or 1
         LogDebug(('[inventory] hasItem(item=%s, amount=%s) [client]'):format(tostring(item), tostring(amount)))
-        if sharedConfig.Framework == 'qbx_core' then
-            local count = exports.ox_inventory:Search('count', item)
-            return count and count >= amount
+        if not item or amount <= 0 then return false end
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
+            local count = exports.ox_inventory:Search('count', item) or 0
+            return count >= amount
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            return (exports['qs-inventory']:Search(item) or 0) >= amount
         elseif sharedConfig.Framework == 'qb-core' then
             local core = exports['qb-core']:GetCoreObject()
             return core and core.Functions.HasItem(item, amount) or false
@@ -554,17 +633,16 @@ else
         local missingItems = {}
         LogDebug('[inventory] hasItems [client]')
         if sharedConfig.Inventory == 'qs-inventory' then
-            local items = exports['qs-inventory']:getUserInventory()
+            local items = exports['qs-inventory']:getUserInventory() or {}
             for item, requiredAmount in pairs(requiredItems) do
-                local found = false
+                local foundAmount = 0
                 for _, invItem in pairs(items) do
-                    if invItem.name == item and invItem.amount >= requiredAmount then
-                        found = true
-                        break
+                    if invItem.name == item then
+                        foundAmount = foundAmount + (invItem.amount or invItem.count or 0)
                     end
                 end
-                if not found then
-                    table.insert(missingItems, {item = item, missingAmount = requiredAmount})
+                if foundAmount < requiredAmount then
+                    table.insert(missingItems, {item = item, missingAmount = requiredAmount - foundAmount})
                 end
             end
         elseif sharedConfig.Inventory == 'ps-inventory' or sharedConfig.Inventory == 'qb-inventory' or sharedConfig.Inventory == 'qb-old-inventory' then
@@ -575,7 +653,7 @@ else
             end
         elseif sharedConfig.Inventory == 'ox_inventory' then
             for item, requiredAmount in pairs(requiredItems) do
-                local count = exports.ox_inventory:Search('count', item)
+                local count = exports.ox_inventory:Search('count', item) or 0
                 if count < requiredAmount then
                     table.insert(missingItems, {item = item, missingAmount = requiredAmount - count})
                 end
@@ -596,9 +674,11 @@ else
     ---@return string
     inventory.getItemLabel = function(itemName)
         LogDebug(('[inventory] getItemLabel(item=%s)'):format(tostring(itemName)))
-        if sharedConfig.Framework == 'qbx_core' then
+        if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
             local items = exports.ox_inventory:Items()
             return items[itemName] and items[itemName].label or itemName
+        elseif sharedConfig.Inventory == 'qs-inventory' then
+            return exports['qs-inventory']:GetItemLabel(itemName) or itemName
         elseif sharedConfig.Framework == 'qb-core' then
             local core = exports['qb-core']:GetCoreObject()
             return core and core.Shared.Items[itemName] and core.Shared.Items[itemName].label or itemName
@@ -616,8 +696,11 @@ end
 ---@return table|nil
 inventory.sharedItems = function(item)
     LogDebug(('[inventory] sharedItems(item=%s)'):format(tostring(item)))
-    if sharedConfig.Framework == 'qbx_core' then
+    if sharedConfig.Inventory == 'ox_inventory' or sharedConfig.Framework == 'qbx_core' then
         return exports.ox_inventory:Items()[item]
+    elseif sharedConfig.Inventory == 'qs-inventory' then
+        local items = exports['qs-inventory']:GetItemList()
+        return items and items[item]
     elseif sharedConfig.Framework == 'qb-core' then
         local QBCore = exports['qb-core']:GetCoreObject()
         return QBCore and QBCore.Shared.Items[item]

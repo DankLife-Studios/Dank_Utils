@@ -3,12 +3,11 @@ local IsPlayerAceAllowed = IsPlayerAceAllowed
 local ExecuteCommand = ExecuteCommand
 local type = type
 local ipairs = ipairs
-local pairs = pairs
 local tostring = tostring
 
 local sharedConfig = require 'config.dankutils_shared'
 local playerModule = require 'modules.player'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@class DankPermissions
 local permissions = {}
@@ -27,8 +26,6 @@ if IsDuplicityVersion() then
         if IsPlayerAceAllowed(tostring(source), strAce) then return true end
         if IsPlayerAceAllowed(tostring(source), 'group.' .. strAce) then return true end
         if IsPlayerAceAllowed(tostring(source), 'command.' .. strAce) then return true end
-        if IsPlayerAceAllowed(tostring(source), 'command') then return true end
-
         return false
     end
 
@@ -124,6 +121,8 @@ if IsDuplicityVersion() then
             elseif type(target) == 'string' then
                 ExecuteCommand(('add_principal %s group.%s'):format(target, perm))
                 ExecuteCommand(('add_ace %s %s allow'):format(target, perm))
+            else
+                return false
             end
             return true
         elseif sharedConfig.Framework == 'qb-core' then
@@ -153,6 +152,8 @@ if IsDuplicityVersion() then
             elseif type(target) == 'string' then
                 ExecuteCommand(('remove_principal %s group.%s'):format(target, perm))
                 ExecuteCommand(('remove_ace %s %s allow'):format(target, perm))
+            else
+                return false
             end
             return true
         elseif sharedConfig.Framework == 'qb-core' then

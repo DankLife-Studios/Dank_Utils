@@ -2,9 +2,10 @@ local TriggerClientEvent = TriggerClientEvent
 local exports = exports
 local print = print
 local tostring = tostring
+local type = type
 
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@class DankPhone
 local phone = {}
@@ -16,14 +17,24 @@ if IsDuplicityVersion() then
     ---@param source integer
     ---@param data table
     phone.sendEmail = function(source, data)
+        if not source or type(data) ~= 'table' then return false end
         local phoneType = sharedConfig.Phone
         LogDebug(('[phone] sendEmail(source=%s) system=%s'):format(tostring(source), tostring(phoneType)))
         if phoneType == 'lb-phone' then
-            exports["lb-phone"]:SendMail({
-                to = source,
+            local recipient = data.to
+            if not recipient then
+                local phoneNumber = exports["lb-phone"]:GetEquippedPhoneNumber(source)
+                recipient = phoneNumber and exports["lb-phone"]:GetEmailAddress(phoneNumber)
+            end
+            if not recipient then return false end
+
+            return exports["lb-phone"]:SendMail({
+                to = recipient,
                 sender = data.sender or "System",
                 subject = data.subject or "Notification",
-                message = data.message or ""
+                message = data.message or "",
+                attachments = data.attachments,
+                actions = data.actions,
             })
         elseif phoneType == 'qs-smartphone-pro' or phoneType == 'qs-smartphone' then
             TriggerEvent('qs-smartphone:server:sendNewMail', {
@@ -61,7 +72,9 @@ if IsDuplicityVersion() then
             })
         else
             print('^3[Dank_Utils] Phone: Unsupported phone system ('..tostring(phoneType)..') for sendEmail.^0')
+            return false
         end
+        return true
     end
 
     -- Abstracting sending an SMS
@@ -69,10 +82,12 @@ if IsDuplicityVersion() then
     ---@param source integer
     ---@param data table
     phone.sendSMS = function(source, data)
+        if not source or type(data) ~= 'table' then return false end
         local phoneType = sharedConfig.Phone
         LogDebug(('[phone] sendSMS(source=%s) system=%s'):format(tostring(source), tostring(phoneType)))
         if phoneType == 'lb-phone' then
-            exports["lb-phone"]:SendMessage(data.number, data.message)
+            local sender = data.from or data.sender or 'System'
+            return exports["lb-phone"]:SendMessage(sender, data.number, data.message or '', data.attachments)
         elseif phoneType == 'qs-smartphone-pro' or phoneType == 'qs-smartphone' then
             TriggerClientEvent('qs-smartphone:client:Notify', source, {
                 title = "New Message",
@@ -93,7 +108,9 @@ if IsDuplicityVersion() then
             })
         else
             print('^3[Dank_Utils] Phone: Unsupported phone system ('..tostring(phoneType)..') for sendSMS.^0')
+            return false
         end
+        return true
     end
 end
 

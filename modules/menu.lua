@@ -8,7 +8,7 @@ local type = type
 local table = table
 
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@class DankMenu
 local menu = {}
@@ -85,9 +85,13 @@ if not IsDuplicityVersion() then
                     header = headerText,
                     txt = opt.description or opt.txt,
                     icon = opt.icon,
+                    disabled = opt.disabled,
+                    hidden = opt.hidden,
+                    action = opt.onSelect,
                     params = {
                         event = opt.event or (opt.params and opt.params.event),
-                        args = opt.args or (opt.params and opt.params.args)
+                        args = opt.args or (opt.params and opt.params.args),
+                        isServer = opt.type == 'server' or (opt.params and opt.params.isServer) or false,
                     }
                 })
             end
@@ -105,7 +109,7 @@ if not IsDuplicityVersion() then
                     header = opt.title or opt.header,
                     context = opt.description or opt.txt,
                     event = opt.event or (opt.params and opt.params.event),
-                    args = { opt.args or (opt.params and opt.params.args) }
+                    args = opt.args or (opt.params and opt.params.args)
                 })
             end
             if menuType == 'nh-context' then

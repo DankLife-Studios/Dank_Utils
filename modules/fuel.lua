@@ -5,7 +5,7 @@
 local fuel = {}
 
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 -- Internal helper: resolve the active fuel script name
 ---@return string
@@ -30,8 +30,9 @@ fuel.set = function(veh, level)
 
     if IsDuplicityVersion() then
         -- SERVER
+        Entity(veh).state.fuel = level
         if script == 'ox_fuel' then
-            Entity(veh).state.fuel = level
+            return
         else
             local owner = NetworkGetEntityOwner(veh)
             local netId = NetworkGetNetworkIdFromEntity(veh)
@@ -78,16 +79,16 @@ fuel.get = function(veh)
     if IsDuplicityVersion() then
         -- SERVER
         if script == 'ox_fuel' then
-            return Entity(veh).state.fuel or 100.0
+            return tonumber(Entity(veh).state.fuel) or 100.0
         else
             -- Synchronous fuel fetching on server for legacy scripts is unsupported natively
             -- Defaulting to state bags or 100.0
-            return Entity(veh).state.fuel or 100.0
+            return tonumber(Entity(veh).state.fuel) or 100.0
         end
     else
         -- CLIENT
         if script == 'ox_fuel' then
-            return Entity(veh).state.fuel or GetVehicleFuelLevel(veh)
+            return tonumber(Entity(veh).state.fuel) or GetVehicleFuelLevel(veh)
         elseif script == 'cdn-fuel' then
             return exports['cdn-fuel']:GetFuel(veh)
         elseif script == 'ti_fuel' then

@@ -6,8 +6,7 @@
     (populated by the Dank_PokemonTCG resource's shared/cards.lua).
 ]]
 
-local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@class DankTcg
 local tcg = {}
@@ -57,10 +56,28 @@ function tcg.ValidateEnergy(activeCardName, requiredEnergy, attachedEnergy)
     if type(requiredEnergy) ~= 'table' then return false end
     attachedEnergy = type(attachedEnergy) == 'table' and attachedEnergy or {}
 
-    for energyType, amount in pairs(requiredEnergy) do
-        if (attachedEnergy[energyType] or 0) < amount then
-            return false
+    local remainingEnergy = 0
+    for energyType, attachedAmount in pairs(attachedEnergy) do
+        if energyType ~= 'colorless' then
+            remainingEnergy = remainingEnergy + math.max(0, tonumber(attachedAmount) or 0)
         end
+    end
+
+    for energyType, requiredAmount in pairs(requiredEnergy) do
+        if energyType ~= 'colorless' then
+            local available = math.max(0, tonumber(attachedEnergy[energyType]) or 0)
+            requiredAmount = math.max(0, tonumber(requiredAmount) or 0)
+            if available < requiredAmount then
+                return false
+            end
+            remainingEnergy = remainingEnergy - requiredAmount
+        end
+    end
+
+    local colorlessRequired = math.max(0, tonumber(requiredEnergy.colorless) or 0)
+    remainingEnergy = remainingEnergy + math.max(0, tonumber(attachedEnergy.colorless) or 0)
+    if remainingEnergy < colorlessRequired then
+            return false
     end
 
     return true
@@ -84,7 +101,7 @@ function tcg.CalculateDamage(attackerName, defenderName, attackIndex)
     local attack = attacker.attacks and attacker.attacks[attackIndex]
     if not attack or not attack.damage then return 0 end
 
-    local damage = attack.damage
+    local damage = tonumber(attack.damage) or 0
 
     if defender.weakness and defender.weakness.type == attacker.type then
         damage = math.floor(damage * (defender.weakness.multiplier or 2))
@@ -112,7 +129,7 @@ function tcg.AttackCost(activeCardName, attackIndex)
 
     local total = 0
     for _, amount in pairs(attack.cost) do
-        total = total + amount
+        total = total + (tonumber(amount) or 0)
     end
     return total
 end

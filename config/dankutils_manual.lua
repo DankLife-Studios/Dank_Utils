@@ -11,7 +11,7 @@
 ---@field Garage string|nil
 
 return {
-    Debug = true, -- Set to true to enable debug logging
+    Debug = false, -- Set to true to enable debug logging
 
     -- Uncomment ONE framework to force manual selection. Otherwise, leave commented for AutoDetect.
     -- Framework = 'qbx_core',

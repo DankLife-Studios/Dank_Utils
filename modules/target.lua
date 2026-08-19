@@ -7,7 +7,7 @@ local type = type
 local math = math
 
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@class DankTarget
 local target = {}
@@ -43,7 +43,8 @@ if not IsDuplicityVersion() then
 
         local targetType = sharedConfig.Target
         if targetType == 'ox_target' then
-            exports.ox_target:addBoxZone({
+            return exports.ox_target:addBoxZone({
+                name = zoneName,
                 coords = zoneCoords,
                 size = zoneSize,
                 rotation = rotation,
@@ -62,12 +63,12 @@ if not IsDuplicityVersion() then
                     qbOptions[i].type = 'client'
                 end
             end
-            exports['qb-target']:AddBoxZone(zoneName, zoneCoords, zoneSize.x, zoneSize.y, {
+            return exports['qb-target']:AddBoxZone(zoneName, zoneCoords, zoneSize.x, zoneSize.y, {
                 name = zoneName,
                 heading = rotation,
                 debugPoly = debugPoly,
-                minZ = zoneCoords.z - 2.0,
-                maxZ = zoneCoords.z + 2.0,
+                minZ = zoneCoords.z - ((zoneSize.z or 4.0) / 2),
+                maxZ = zoneCoords.z + ((zoneSize.z or 4.0) / 2),
             }, {
                 options = qbOptions,
                 distance = distance
@@ -84,12 +85,12 @@ if not IsDuplicityVersion() then
                     qbOptions[i].type = 'client'
                 end
             end
-            exports.qtarget:AddBoxZone(zoneName, zoneCoords, zoneSize.x, zoneSize.y, {
+            return exports.qtarget:AddBoxZone(zoneName, zoneCoords, zoneSize.x, zoneSize.y, {
                 name = zoneName,
                 heading = rotation,
                 debugPoly = debugPoly,
-                minZ = zoneCoords.z - 2.0,
-                maxZ = zoneCoords.z + 2.0,
+                minZ = zoneCoords.z - ((zoneSize.z or 4.0) / 2),
+                maxZ = zoneCoords.z + ((zoneSize.z or 4.0) / 2),
             }, {
                 options = qbOptions,
                 distance = distance
@@ -107,7 +108,7 @@ if not IsDuplicityVersion() then
         local targetType = sharedConfig.Target
         local opts = options or {}
         if targetType == 'ox_target' then
-            exports.ox_target:addLocalEntity(entity, opts)
+            return exports.ox_target:addLocalEntity(entity, opts)
         elseif targetType == 'qb-target' then
             local qbOptions = {}
             for i, opt in ipairs(opts) do
@@ -120,7 +121,7 @@ if not IsDuplicityVersion() then
                     qbOptions[i].type = 'client'
                 end
             end
-            exports['qb-target']:AddTargetEntity(entity, {
+            return exports['qb-target']:AddTargetEntity(entity, {
                 options = qbOptions,
                 distance = 2.5
             })
@@ -136,7 +137,7 @@ if not IsDuplicityVersion() then
                     qbOptions[i].type = 'client'
                 end
             end
-            exports.qtarget:AddTargetEntity(entity, {
+            return exports.qtarget:AddTargetEntity(entity, {
                 options = qbOptions,
                 distance = 2.5
             })
@@ -162,7 +163,7 @@ if not IsDuplicityVersion() then
 
         local targetType = sharedConfig.Target
         if targetType == 'ox_target' then
-            exports.ox_target:addModel(models, opts)
+            return exports.ox_target:addModel(models, opts)
         elseif targetType == 'qb-target' then
             local qbOptions = {}
             for i, opt in ipairs(opts) do
@@ -175,7 +176,7 @@ if not IsDuplicityVersion() then
                     qbOptions[i].type = 'client'
                 end
             end
-            exports['qb-target']:AddTargetModel(models, {
+            return exports['qb-target']:AddTargetModel(models, {
                 options = qbOptions,
                 distance = 2.5
             })
@@ -191,7 +192,7 @@ if not IsDuplicityVersion() then
                     qbOptions[i].type = 'client'
                 end
             end
-            exports.qtarget:AddTargetModel(models, {
+            return exports.qtarget:AddTargetModel(models, {
                 options = qbOptions,
                 distance = 2.5
             })
@@ -201,33 +202,42 @@ if not IsDuplicityVersion() then
     end
 
     ---@param options table
-    ---@return string|nil
+    ---@return integer|string|nil
     target.addCircleZone = function(options)
+        if type(options) ~= 'table' or not options.coords then return nil end
         LogDebug(('[target] addCircleZone system=%s'):format(tostring(sharedConfig.Target)))
         local targetType = sharedConfig.Target
+        local targetOptions = options.options or {}
+        if targetOptions.name or targetOptions.label or targetOptions.event or targetOptions.onSelect then
+            targetOptions = { targetOptions }
+        end
         if targetType == 'ox_target' then
             return exports.ox_target:addSphereZone({
+                name = options.name,
                 coords = options.coords,
                 radius = options.radius or 1.0,
                 debug = options.debugPoly or false,
-                options = { options.options }
+                options = targetOptions
             })
         elseif targetType == 'qb-target' or targetType == 'qtarget' then
             local targetExport = targetType == 'qb-target' and exports['qb-target'] or exports.qtarget
             local qbOptions = {}
-            local opt = options.options or {}
-            qbOptions[1] = {}
-            for k, v in pairs(opt) do qbOptions[1][k] = v end
-            if not qbOptions[1].type then qbOptions[1].type = 'client' end
-            targetExport:AddCircleZone(options.name, options.coords, options.radius or 1.0, {
+            for i, opt in ipairs(targetOptions) do
+                qbOptions[i] = {}
+                for k, v in pairs(opt) do qbOptions[i][k] = v end
+                if qbOptions[i].groups and not qbOptions[i].job then
+                    qbOptions[i].job = qbOptions[i].groups
+                end
+                if not qbOptions[i].type then qbOptions[i].type = 'client' end
+            end
+            return targetExport:AddCircleZone(options.name, options.coords, options.radius or 1.0, {
                 name = options.name,
                 debugPoly = options.debugPoly or false,
                 useZ = true
             }, {
                 options = qbOptions,
-                distance = opt.distance or 2.5
+                distance = options.distance or 2.5
             })
-            return options.name
         end
     end
 
@@ -249,7 +259,7 @@ if not IsDuplicityVersion() then
         LogDebug(('[target] addGlobalVehicle system=%s'):format(tostring(sharedConfig.Target)))
         local targetType = sharedConfig.Target
         if targetType == 'ox_target' then
-            exports.ox_target:addGlobalVehicle(options)
+            return exports.ox_target:addGlobalVehicle(options)
         elseif targetType == 'qb-target' or targetType == 'qtarget' then
             local targetExport = targetType == 'qb-target' and exports['qb-target'] or exports.qtarget
             local qbOptions = {}
@@ -258,7 +268,7 @@ if not IsDuplicityVersion() then
                 for k, v in pairs(opt) do qbOptions[i][k] = v end
                 if not qbOptions[i].type then qbOptions[i].type = 'client' end
             end
-            targetExport:AddGlobalVehicle({
+            return targetExport:AddGlobalVehicle({
                 options = qbOptions,
                 distance = 2.5
             })
@@ -270,7 +280,7 @@ if not IsDuplicityVersion() then
         LogDebug(('[target] addGlobalOption system=%s'):format(tostring(sharedConfig.Target)))
         local targetType = sharedConfig.Target
         if targetType == 'ox_target' then
-            exports.ox_target:addGlobalOption(options)
+            return exports.ox_target:addGlobalOption(options)
         elseif targetType == 'qb-target' or targetType == 'qtarget' then
             print('^3[Dank_Utils] addGlobalOption is not natively supported in qb-target/qtarget.^0')
         end

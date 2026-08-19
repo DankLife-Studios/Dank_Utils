@@ -1,59 +1,94 @@
 -- Dank_Utils :: debug.lua  (shared)
 -- Provides:
---   Dank.debug.enable = true/false   -- SERVER-SIDE ONLY master switch
---   Dank.debug.get()                 -- returns the current state
+--   Dank.debug.enable = true/false   -- SERVER-SIDE ONLY per-resource switch
+--   Dank.debug.get()                 -- returns the current resource's debug state
 --   Dank.debug.print(message, level) -- 'info' | 'warning' | 'error'
 --
--- Server-side only:
---   `Dank.debug.enable` can ONLY be set from the server. The server
---   replicates the flag to all clients through the `dankutils:debug`
---   state bag, so one server-side line enables BOTH server and client
---   debug prints. Client-side writes are ignored.
+-- Resource debug is intentionally separate from Dank_Utils internal debug:
+--   * config/dankutils_manual.lua -> Debug controls ONLY Dank_Utils internal LogDebug output.
+--   * Dank.debug.enable controls ONLY the resource that is using Dank_Utils.
+--
+-- Example in another resource's SERVER code:
+--   Dank.debug.enable = Config.Debug
+--
+-- That one server-side assignment controls Dank.debug.print on BOTH the server
+-- and client for that resource. Each resource gets its own replicated state key,
+-- so one resource can no longer enable/disable another resource's debug output.
 
 local print = print
 local type = type
 local tostring = tostring
+local rawset = rawset
+local IsDuplicityVersion = IsDuplicityVersion
+local GetCurrentResourceName = GetCurrentResourceName
+local GlobalState = GlobalState
 local LogDebug = LogDebug or function() end
 
-local STATE_KEY = 'dankutils:debug'
+-- This is the resource runtime consuming Dank_Utils, not necessarily Dank_Utils itself.
+-- Capturing it once guarantees the server and client use the exact same key and label.
+local resourceName = GetCurrentResourceName()
+local STATE_KEY = ('dankutils:debug:%s'):format(resourceName)
+local serverEnabled = false
 
 ---@class DankDebug
 ---@field enable boolean
 local debug = {}
 
+---@return boolean
+local function getClientState()
+    return GlobalState[STATE_KEY] == true
+end
+
+---@param enabled boolean
+local function publishServerState(enabled)
+    -- GlobalState assignment is server-replicated automatically.
+    -- A per-resource key prevents resources from overwriting each other.
+    GlobalState[STATE_KEY] = enabled == true
+end
+
+-- Reset only this resource's replicated flag when its server runtime loads.
+-- This prevents a stale true value from surviving a resource restart before
+-- the resource reapplies `Dank.debug.enable = Config.Debug`.
+if IsDuplicityVersion() then
+    publishServerState(false)
+end
+
 setmetatable(debug, {
-    __index = function(t, k)
-        if k == 'enable' then
-            if IsDuplicityVersion() then
-                return rawget(t, 'enable') == true
-            end
-            -- Clients only ever see the server-replicated flag
-            return GlobalState[STATE_KEY] == true
+    __index = function(_, key)
+        if key ~= 'enable' then return nil end
+
+        if IsDuplicityVersion() then
+            return serverEnabled
         end
-        return nil
+
+        return getClientState()
     end,
-    __newindex = function(t, k, v)
-        -- Server-side only: ignore writes from clients
-        if k == 'enable' and not IsDuplicityVersion() then
-            LogDebug('[debug] Dank.debug.enable ignored on client — server-side only')
+
+    __newindex = function(t, key, value)
+        if key ~= 'enable' then
+            rawset(t, key, value)
             return
         end
-        rawset(t, k, v)
-        -- Writing the flag on the server pushes it to every client
-        -- so a single server-side opt-in enables both sides.
-        if k == 'enable' and IsDuplicityVersion() then
-            GlobalState:set(STATE_KEY, v == true, true)
+
+        -- Client code cannot enable or disable resource debug. The server is
+        -- the single source of truth for both server and client printing.
+        if not IsDuplicityVersion() then
+            LogDebug(('[debug] Ignored client write to Dank.debug.enable for %s'):format(resourceName))
+            return
         end
-    end
+
+        serverEnabled = value == true
+        publishServerState(serverEnabled)
+    end,
 })
 
--- True when prints should fire on this side.
 ---@return boolean
 local function isEnabled()
     if IsDuplicityVersion() then
-        return debug.enable
+        return serverEnabled
     end
-    return GlobalState[STATE_KEY] == true
+
+    return getClientState()
 end
 
 local LEVELS = {
@@ -72,27 +107,31 @@ local function normalizeLevel(level)
 end
 
 -- Dank.debug.get()
--- Returns whether debug is enabled for the calling script on this side
--- (includes the server-side replicated flag on clients).
+-- Returns the current resource's effective debug state on this side.
 ---@return boolean
 debug.get = function()
     return isEnabled()
 end
 
 -- Dank.debug.print(message, level)
--- Prints a debug message to the console with the calling script's name.
--- level: 'info' | 'warning' | 'error' (default 'info')
----@param message string
+-- Prints only when THIS resource's server-side Dank.debug.enable is true.
+---@param message any
 ---@param level? string
 debug.print = function(message, level)
     if not isEnabled() then return end
 
     local lvl = LEVELS[normalizeLevel(level)]
-    local scriptName = GetCurrentResourceName()
-
-    print(('^2[%s]^7 %s[%s]^7 %s'):format(scriptName, lvl.color, lvl.tag, tostring(message)))
+    print(('^2[%s]^7 %s[%s]^7 %s'):format(
+        resourceName,
+        lvl.color,
+        lvl.tag,
+        tostring(message)
+    ))
 end
 
-LogDebug(('[debug] module loaded (enable=%s)'):format(tostring(debug.enable)))
+LogDebug(('[debug] module loaded for %s (resource debug=%s)'):format(
+    resourceName,
+    tostring(debug.enable)
+))
 
 return debug

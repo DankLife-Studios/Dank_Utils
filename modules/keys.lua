@@ -5,7 +5,7 @@
 local keys = {}
 
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@return string
 local function getKeysScript()
@@ -19,6 +19,10 @@ keys.give = function(source, veh, plate)
     if not source or not veh then
         LogDebug('[keys] give skipped (missing source or vehicle)')
         return
+    end
+
+    if not plate and DoesEntityExist(veh) then
+        plate = GetVehicleNumberPlateText(veh)
     end
 
     local script = getKeysScript()
@@ -60,6 +64,10 @@ keys.remove = function(source, veh, plate)
     if not source or not veh then
         LogDebug('[keys] remove skipped (missing source or vehicle)')
         return
+    end
+
+    if not plate and DoesEntityExist(veh) then
+        plate = GetVehicleNumberPlateText(veh)
     end
 
     local script = getKeysScript()

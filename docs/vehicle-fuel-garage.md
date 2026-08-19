@@ -1,122 +1,200 @@
-# 🚗 Vehicle · ⛽ Fuel · 🏢 Garage
+# Vehicle · Fuel · Garage
 
-## Dank.vehicle
+Reference for the `Dank.vehicle`, `Dank.fuel`, and `Dank.garage` modules.
 
-> Seamless vehicle spawning with automatic plate generation, 100% fuel, and keys.
+## Vehicle
 
-### Functions
+`Dank.vehicle` spawns networked vehicles and applies the common post-spawn setup: an optional generated plate, full fuel, and keys for the requesting player.
 
-| Scope | Function | Description |
-|:---:|---|---|
-| `[Server]` | `Dank.vehicle.spawn(source, model, coords, platePrefix, cb)` | Spawns a vehicle, sets fuel to 100, gives keys, and runs the callback. |
-| `[Client]` | `Dank.vehicle.spawn(model, coords, platePrefix, cb)` | Requests a spawn through the server and returns the local entity. |
-| `[Client]` | `Dank.vehicle.getData(model)` | Returns the configuration data for a vehicle model. |
+### API
 
-> 📌 **Automatic extras** — every spawned vehicle gets a random 4-digit plate suffix (when `platePrefix` is a string), 100% fuel, and keys handed to the requesting player.
+| Function | Scope | Description |
+|---|:---:|---|
+| `Dank.vehicle.spawn(source, model, coords, platePrefix?, callback?)` | Server | Spawns a vehicle and calls `callback(vehicle)` or `callback(nil)`. |
+| `Dank.vehicle.spawn(model, coords, platePrefix?, callback?)` | Client | Requests a server spawn and calls `callback(vehicle)` or `callback(nil)`. |
+| `Dank.vehicle.getData(model)` | Client | Returns framework vehicle configuration data, or `nil`. |
 
-### Usage
+`model` may be a model name or hash. `coords` must provide `x`, `y`, and `z`; `w` is used as the heading when present.
+
+### Spawn behavior
+
+After the entity is created successfully, the module:
+
+1. Applies `<platePrefix><random 4 digits>` when `platePrefix` is a string.
+2. Sets fuel to `100.0` through `Dank.fuel`.
+3. Gives keys when the server received a valid player source.
+4. Calls the callback with the vehicle entity.
+
+Every failure path now resolves the callback with `nil`; consumers should always guard the entity.
 
 ```lua
--- Server
-Dank.vehicle.spawn(source, 'police', vec4(441.0, -982.0, 30.7, 90.0), 'PD', function(veh)
-    print(('Spawned vehicle with netId %s'):format(NetworkGetNetworkIdFromEntity(veh)))
-end)
+-- server.lua
+Dank.vehicle.spawn(
+    source,
+    'police',
+    vec4(441.0, -982.0, 30.7, 90.0),
+    'PD',
+    function(vehicle)
+        if not vehicle or not DoesEntityExist(vehicle) then
+            print('Vehicle spawn failed')
+            return
+        end
+
+        print(('Spawned network ID %s')
+            :format(NetworkGetNetworkIdFromEntity(vehicle)))
+    end
+)
 ```
 
 ```lua
--- Client
-Dank.vehicle.spawn('police', vec4(441.0, -982.0, 30.7, 90.0), 'PD', function(veh)
-    SetVehicleEngineOn(veh, true, true, true)
-end)
+-- client.lua
+Dank.vehicle.spawn(
+    'police',
+    vec4(441.0, -982.0, 30.7, 90.0),
+    'PD',
+    function(vehicle)
+        if not vehicle then
+            Dank.ui.notify('Vehicle spawn failed', 'error')
+            return
+        end
+
+        -- The client helper starts the engine before this callback.
+        SetVehicleDirtLevel(vehicle, 0.0)
+    end
+)
 
 local data = Dank.vehicle.getData('police')
 ```
 
-### Supported Frameworks
+`getData` is implemented for Qbox, QBCore, and Ox Core. It returns `nil` on other frameworks.
 
-QB-Core · QBX-Core · ESX · ox_core (with native fallback for ND_Core / standalone)
+### Spawn backends
 
----
+- Qbox (`qbx_core`)
+- QBCore (`qb-core`)
+- ESX (`es_extended`)
+- Ox Core (`ox_core`)
+- Native server spawning for ND Core and standalone configurations
 
-## Dank.fuel
+## Fuel
 
-> Set and read fuel on any vehicle, regardless of the active fuel script.
+`Dank.fuel` reads and writes clamped vehicle fuel levels from either side of the network.
 
-### Functions
+### Shared API
 
-| Scope | Function | Description |
-|:---:|---|---|
-| `[Shared]` | `Dank.fuel.set(veh, level)` | Sets the fuel level (clamped to `0.0 – 100.0`). |
-| `[Shared]` | `Dank.fuel.get(veh)` | Returns the current fuel level of a vehicle. |
-
-> 📌 Both functions work on **server and client**. On the server, legacy fuel scripts are handled by forwarding the call to the vehicle owner's client.
-
-### Usage
+| Function | Returns | Description |
+|---|---|---|
+| `Dank.fuel.set(vehicle, level)` | — | Sets fuel between `0.0` and `100.0`. Invalid/non-numeric levels default to `100.0`. |
+| `Dank.fuel.get(vehicle)` | `number` | Returns the current fuel level. Invalid entities return `0.0`. |
 
 ```lua
--- Works on server and client
-Dank.fuel.set(vehicle, 100.0)
-local fuel = Dank.fuel.get(vehicle)
+Dank.fuel.set(vehicle, 75.5)
+
+local level = Dank.fuel.get(vehicle)
+print(('Fuel: %.1f%%'):format(level))
 ```
 
-### Supported Fuel Scripts
+### Server behavior
 
-ox_fuel · cdn-fuel · ti_fuel · LegacyFuel · lj-fuel · ps-fuel
+Every server-side write updates `Entity(vehicle).state.fuel`, regardless of the selected fuel resource. This keeps a replicated source of truth available to other scripts.
 
-Falls back to the native `SetVehicleFuelLevel` / `GetVehicleFuelLevel` when no fuel script is detected.
+For legacy client-owned fuel resources, the module also forwards the update to the entity owner's client when an owner and network ID are available. If no owner is available, the state-bag value is still retained.
 
----
+Server reads use the state bag and default to `100.0` when it has no value.
 
-## Dank.garage
+### Client behavior
 
-> Garage and vehicle state management with safe wrappers around popular garage scripts.
+The client uses the configured fuel adapter. When none is detected, it falls back to the FiveM fuel natives.
 
-### Functions
+| Resource | Set | Get |
+|---|:---:|:---:|
+| `ox_fuel` | State bag | State bag, then native fallback |
+| `cdn-fuel` | Export | Export |
+| `ti_fuel` | Event | Decorator, then native fallback |
+| `LegacyFuel` | Export | Export |
+| `lj-fuel` | Export | Export |
+| `ps-fuel` | Export | Export |
+| None/unsupported | Native | Native |
 
-| Scope | Function | Description |
-|:---:|---|---|
-| `[Server]` | `Dank.garage.registerOutside(plate, netId, model?, garageId?)` | Registers a spawned vehicle as being outside a garage. |
-| `[Server]` | `Dank.garage.deleteOutside(plate)` | Removes the outside / spawned state for a plate. |
-| `[Server]` | `Dank.garage.storeVehicle(source, vehicleEntity, garageId?)` | Stores a vehicle into a garage. |
-| `[Server]` | `Dank.garage.impoundVehicle(plate, impoundName?, reason?, fee?)` | Impounds a vehicle by plate. |
-| `[Server]` | `Dank.garage.getVehicleState(plate, cb)` | Queries the vehicle state and passes it to the callback. |
-| `[Server]` | `Dank.garage.getAllGarages()` | Returns all registered garage locations and metadata. |
-| `[Client]` | `Dank.garage.registerOutside(plate, netId, model?, garageId?)` | Client-side outside registration. |
-| `[Client]` | `Dank.garage.deleteOutside(plate)` | Client-side outside removal. |
-| `[Client]` | `Dank.garage.storeVehicle(vehicleEntity?, garageId?)` | Client-side vehicle storage. |
+## Garage
 
-### Vehicle States
+`Dank.garage` wraps outside-state, storage, impound, vehicle-state, and garage-list operations for supported garage resources.
 
-| Value | State |
+### Server API
+
+| Function | Returns | Description |
+|---|---|---|
+| `Dank.garage.registerOutside(plate, netId, model?, garageId?)` | — | Marks a spawned vehicle as outside. |
+| `Dank.garage.deleteOutside(plate)` | — | Removes outside status or marks the vehicle stored. |
+| `Dank.garage.storeVehicle(source, vehicleEntity, garageId?)` | — | Invokes the configured store operation. |
+| `Dank.garage.impoundVehicle(plate, impoundName?, reason?, fee?)` | — | Invokes the configured impound operation. |
+| `Dank.garage.getVehicleState(plate, callback)` | — | Passes a DB-backed state to `callback(state)`. |
+| `Dank.garage.getAllGarages()` | `table[]` | Returns adapter garage definitions, or `{}`. |
+
+### Client API
+
+| Function | Description |
+|---|---|
+| `Dank.garage.registerOutside(plate, netId, model?, garageId?)` | Registers outside state on supported client adapters. |
+| `Dank.garage.deleteOutside(plate)` | Deletes outside state on supported client adapters. |
+| `Dank.garage.storeVehicle(vehicleEntity?, garageId?)` | Stores the supplied vehicle or the vehicle the player is currently driving. |
+| `Dank.garage.impoundVehicle(plate, impoundName?, reason?, fee?)` | Opens/triggers a supported client impound flow. |
+
+### Vehicle states
+
+For QBCore/Qbox and ESX database queries, states are normalized as:
+
+| Value | Meaning |
 |:---:|---|
 | `0` | Outside |
 | `1` | Stored |
 | `2` | Impounded |
 
-### Usage
+`getVehicleState` queries `player_vehicles.state` on QBCore/Qbox and `owned_vehicles.stored` on ESX. Other frameworks receive `0`. The callback is required.
 
 ```lua
--- Server
 Dank.garage.registerOutside('ABC123', netId, 'adder', 'main')
 
 Dank.garage.getVehicleState('ABC123', function(state)
     if state == 1 then
-        print('Vehicle is stored in a garage')
+        print('Vehicle is stored')
+    elseif state == 2 then
+        print('Vehicle is impounded')
     end
 end)
 
-Dank.garage.impoundVehicle('ABC123', 'lspd_impound', 'Illegal parking', 500)
+Dank.garage.impoundVehicle(
+    'ABC123',
+    'lspd_impound',
+    'Illegal parking',
+    500
+)
 ```
 
 ```lua
--- Client
-Dank.garage.storeVehicle(nil, 'main') -- stores the vehicle the player is in
+-- client.lua: nil selects the vehicle occupied by the player.
+Dank.garage.storeVehicle(nil, 'main')
 ```
 
-### Supported Garage Systems
+### Adapter coverage
 
-jg-advancedgarages · qb-garages · cd_garage · okokGarage · rcore_garage · qs-advancedgarages · esx_garage
+Garage resources expose different feature sets. The wrapper calls only operations implemented for each adapter.
+
+| Resource | Outside state | Store | Impound | Garage list |
+|---|:---:|:---:|:---:|:---:|
+| `jg-advancedgarages` | ✓ | ✓ | ✓ | ✓ |
+| `qb-garages` | DB/server | ✓ | ✓ | ✓ when export exists |
+| `cd_garage` | — | ✓ | ✓ | ✓ |
+| `okokGarage` | ✓ | ✓ | ✓ | ✓ |
+| `rcore_garage` | ✓ | ✓ | ✓ | — |
+| `qs-advancedgarages` | ✓ | ✓ | — | ✓ when export exists |
+| `qs-garage` | ✓ | ✓ | — | ✓ when export exists |
+| `esx_garage` | DB/server | — | DB/server | — |
+
+Both QS names use their configured resource name; no hardcoded alias is substituted.
+
+Garage adapter calls are protected. An adapter exception is sent to debug logging instead of crashing the calling resource. Because these helpers do not return success booleans, use the target garage's state/event flow when you need operation confirmation.
 
 ---
 
-[← Back to README](../README.md)
+[Back to documentation index](../README.md)

@@ -6,7 +6,7 @@ local print = print
 local Wait = Wait
 
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@class DankUi
 local ui = {}
@@ -27,7 +27,11 @@ if IsDuplicityVersion() then
         elseif sharedConfig.Framework == 'es_extended' then
             TriggerClientEvent('esx:showNotification', source, message, messageType, time)
         elseif sharedConfig.Framework == 'ND_Core' or sharedConfig.Framework == 'ox_core' then
-            TriggerClientEvent('ox_lib:notify', source, { description = message, type = messageType })
+            TriggerClientEvent('ox_lib:notify', source, {
+                description = message,
+                type = messageType,
+                duration = time,
+            })
         else
             LogDebug('[ui] notify: chat fallback (no framework detected)')
             TriggerClientEvent('chat:addMessage', source, { args = {message} })
@@ -50,7 +54,7 @@ else
             TriggerEvent('esx:showNotification', message, type, time)
         elseif sharedConfig.Framework == 'ND_Core' or sharedConfig.Framework == 'ox_core' then
             if lib then
-                lib.notify({ description = message, type = type })
+                lib.notify({ description = message, type = type, duration = time })
             else
                 TriggerEvent('chat:addMessage', { args = {message} })
             end
@@ -72,6 +76,7 @@ else
 
     ---@param params table
     ui.progressbar = function(params)
+        params = params or {}
         local framework = sharedConfig.Framework
         local name = params.name or 'progress'
         local label = params.label or 'Action'
@@ -96,9 +101,9 @@ else
                 prop = prop,
             }
             if lib.progressBar(options) then onFinish() else onCancel() end
-        elseif framework == 'qb-core' or framework == 'qbx_core' then
+        elseif framework == 'qb-core' then
             LogDebug(('[ui] progressbar(%s) using framework Progressbar'):format(tostring(label)))
-            local core = exports['qb-core'] and exports['qb-core']:GetCoreObject()
+            local core = GetResourceState('qb-core') == 'started' and exports['qb-core']:GetCoreObject()
             if core and core.Functions and core.Functions.Progressbar then
                 core.Functions.Progressbar(name, label, duration, useWhileDead, canCancel, disableControls, animation, prop, nil, onFinish, onCancel)
             else

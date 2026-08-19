@@ -1,124 +1,227 @@
-# 🏦 Banking · 🧠 Core · 📱 Phone
+# Banking · Core · Phone
 
-## Dank.banking
+Reference for the `Dank.banking`, `Dank.core`, and `Dank.phone` modules.
 
-> Society and standard account operations across major banking resources.
+## Banking
 
-### Functions
+`Dank.banking` provides account balance and money mutation helpers across supported banking resources.
 
-| Scope | Function | Description |
-|:---:|---|---|
-| `[Server]` | `Dank.banking.getAccountBalance(account)` | Returns the balance for a society or standard account. |
-| `[Server]` | `Dank.banking.addMoney(account, amount)` | Deposits money into an account. |
-| `[Server]` | `Dank.banking.removeMoney(account, amount)` | Withdraws money from an account. |
+### Server API
 
-> 📌 If `account` is a numeric player source, operations fall back to the framework bank account (`Dank.player` money functions).
+| Function | Returns | Description |
+|---|---|---|
+| `Dank.banking.getAccountBalance(account)` | `number` | Returns the account balance. Unsupported adapters and missing accounts return `0`. |
+| `Dank.banking.addMoney(account, amount)` | adapter result or `false` | Adds a positive amount to an account. |
+| `Dank.banking.removeMoney(account, amount)` | adapter result or `false` | Removes a positive amount from an account. |
 
-### Usage
+`account` is usually an account name or identifier. When no supported banking resource is running, numeric account values are treated as player sources and use framework bank money as a fallback.
+
+Mutation helpers reject missing, zero, and negative amounts and return `false` without calling the configured resource.
 
 ```lua
--- Server
-Dank.banking.addMoney('society_police', 500)
-local balance = Dank.banking.getAccountBalance('society_police')
+local account = 'business_police'
 
-if balance >= 500 then
-    Dank.banking.removeMoney('society_police', 500)
+local balance = Dank.banking.getAccountBalance(account)
+print(('Current balance: $%s'):format(balance))
+
+if not Dank.banking.addMoney(account, 500) then
+    print('Unable to credit the account')
+end
+
+if balance >= 250 and not Dank.banking.removeMoney(account, 250) then
+    print('Unable to debit the account')
 end
 ```
 
-### Supported Banking Systems
+### Supported banking systems
 
-okokBanking · qb-banking · qb-management · fd_banking · pefcl · Renewed-Banking · esx_jobbank · qs-banking
+| Resource | Balance | Add | Remove |
+|---|:---:|:---:|:---:|
+| `Renewed-Banking` | ✓ | ✓ | ✓ |
+| `okokBanking` | ✓ | ✓ | ✓ |
+| `qb-banking` | ✓ | ✓ | ✓ |
+| `qb-management` | ✓ | ✓ | ✓ |
+| `fd_banking` | ✓ | ✓ | ✓ |
+| `pefcl` | ✓ | ✓ | ✓ |
+| `esx_jobbank` | ✓ | ✓ | ✓ |
+| `qs-banking` | ✓ | ✓ | ✓ |
 
----
+## Core
 
-## Dank.core
+`Dank.core` exposes framework access, job data, command registration, version checks, and player-load lifecycle hooks.
 
-> Raw framework access, job lookups, command registration, and the built-in version checker.
+### Shared API
 
-### Functions
+| Function | Returns | Description |
+|---|---|---|
+| `Dank.core.getFunctions()` | `table` or `nil` | Returns the detected framework functions/object or raw exports. The exact shape is adapter-specific. |
 
-| Scope | Function | Description |
-|:---:|---|---|
-| `[Shared]` | `Dank.core.getFunctions()` | Exposes raw framework functions for direct overrides. |
-| `[Server]` | `Dank.core.getJob(jobname)` | Fetches the configuration for a specific job. |
-| `[Server]` | `Dank.core.getAllJobs()` | Fetches all registered jobs. |
-| `[Server]` | `Dank.core.addCommand(name, description, args, restricted, callback, group?)` | Registers a framework-agnostic command. |
-| `[Server]` | `Dank.core.versionCheck(options)` | Initializes the version checking loop. |
-| `[Client]` | `Dank.onPlayerLoaded(callback)` | Registers a framework-agnostic callback for when the local player has loaded. |
+### Server API
 
-> 📌 **Client event** — You can also listen directly to `Dank:Client:OnPlayerLoaded`, but using `Dank.onPlayerLoaded` is highly recommended as it natively hooks the active framework.
+| Function | Returns | Description |
+|---|---|---|
+| `Dank.core.getJob(jobName)` | `table` or `nil` | Returns one job definition. |
+| `Dank.core.getAllJobs()` | `table` | Returns every available job definition. |
+| `Dank.core.addCommand(name, description, args, restricted, callback, group?)` | — | Registers a framework command. |
+| `Dank.core.versionCheck(options?)` | — | Starts a recurring JSON-backed version check for the current resource. |
+| `Dank.core.onPlayerLoaded(callback)` | — | Runs `callback(source, ...)` whenever a player-loaded event fires. |
 
-### Usage
+### Client API
+
+| Function | Returns | Description |
+|---|---|---|
+| `Dank.core.onPlayerLoaded(callback)` | — | Runs `callback(...)` whenever the local player-loaded event fires. |
+
+The callback helper normalizes the detected framework event. Register it during resource startup so no load event is missed.
 
 ```lua
--- Server
-local job = Dank.core.getJob('police')
-
-Dank.core.addCommand('heal', 'Heals the player', {}, false, function(source, args)
-    print(('Player %s healed'):format(source))
+-- server.lua
+Dank.core.onPlayerLoaded(function(source)
+    print(('Player %s is ready'):format(source))
 end)
 ```
 
 ```lua
--- Client
-Dank.onPlayerLoaded(function()
-    print('Player data is ready!')
+-- client.lua
+Dank.core.onPlayerLoaded(function()
+    print('Local player is ready')
 end)
 ```
 
-### Version Checking
+### Commands
 
 ```lua
--- Server
+Dank.core.addCommand(
+    'coords',
+    'Print your current coordinates',
+    {},
+    false,
+    function(source)
+        print(source, GetEntityCoords(GetPlayerPed(source)))
+    end,
+    'admin'
+)
+```
+
+Command callback arguments and permission formats follow the active framework. When a framework command API is unavailable, the module falls back to `RegisterCommand`.
+
+### Version checks
+
+```lua
 Dank.core.versionCheck({
-    originalScriptName = 'Dank_Bahama_Mama',  -- script name expected in the remote JSON
-    updateURL          = 'https://.../versions.json',
-    checkInterval      = 60 * 60 * 1000,      -- 1 hour
+    originalScriptName = 'my_resource',
+    updateURL = 'https://example.com/scripts_version.json',
+    checkInterval = 60 * 60 * 1000
 })
 ```
 
-### Supported Frameworks
+| Option | Description |
+|---|---|
+| `originalScriptName` | Key to read from the remote JSON object. Defaults to the current resource name. |
+| `updateURL` | URL of a JSON object whose keys are script names and values are versions. |
+| `checkInterval` | Delay between checks in milliseconds. Defaults to one hour and is clamped to at least one second. |
 
-QB-Core · QBX-Core · ESX · ND_Core · ox_core
+Passing a string is shorthand for `originalScriptName`. The local version comes from the current resource's `version` or `script_version` manifest metadata. Malformed versions, invalid JSON, missing keys, and failed HTTP responses are reported without raising an unhandled error. Repeated identical status messages are suppressed.
 
----
+### Supported frameworks
 
-## Dank.phone
+- Qbox (`qbx_core`)
+- QBCore (`qb-core`)
+- ESX (`es_extended`)
+- Ox Core (`ox_core`)
+- ND Core (`ND_Core`)
 
-> Send emails and SMS through the active phone system.
+## Phone
 
-### Functions
+`Dank.phone` sends emails and SMS-style messages through the detected phone resource.
 
-| Scope | Function | Description |
-|:---:|---|---|
-| `[Server]` | `Dank.phone.sendEmail(source, data)` | Sends an email. `data`: `{ sender, subject, message, button? }`. |
-| `[Server]` | `Dank.phone.sendSMS(source, data)` | Sends an SMS. `data`: `{ number, message }`. |
+### Server API
 
-### Usage
+| Function | Returns | Description |
+|---|---|---|
+| `Dank.phone.sendEmail(source, data)` | `boolean` or adapter result | Sends an email. Invalid input and unsupported adapters return `false`. |
+| `Dank.phone.sendSMS(source, data)` | `boolean` or adapter result | Sends an SMS-style message. Invalid input and unsupported adapters return `false`. |
+
+### Email data
+
+| Field | Type | Required | Description |
+|---|---|:---:|---|
+| `to` | `string` | LB alternative | Explicit destination email address for LB Phone. |
+| `sender` | `string` | No | Sender name or address. Defaults to `'System'`. |
+| `subject` | `string` | No | Email subject. Defaults to `'Notification'`. |
+| `message` | `string` | No | Email body. Defaults to an empty string. |
+| `button` | `table` | No | Legacy phone button/action data. |
+| `attachments` | `table` | No | LB Phone attachments. |
+| `actions` | `table` | No | LB Phone action definitions. |
+
+The `source` function argument is required. For LB Phone, `data.to` takes priority. If it is omitted, the module resolves the source player's equipped phone number and then its email address. If no destination can be resolved, the function returns `false`.
 
 ```lua
--- Server
-Dank.phone.sendEmail(source, {
-    sender  = 'City Hall',
-    subject = 'Your license',
-    message = 'Your license application has been approved.',
-    button  = {
-        buttonEvent = 'cityhall:openLicense',
-        buttonData  = { type = 'pilot' },
-    },
+local sent = Dank.phone.sendEmail(source, {
+    sender = 'City Services',
+    subject = 'Application update',
+    message = 'Your application has been approved.',
+    button = {
+        enabled = true,
+        buttonEvent = 'city:client:openApplication',
+        buttonData = { applicationId = 42 }
+    }
 })
 
-Dank.phone.sendSMS(source, {
-    number  = '555-0100',
-    message = 'You have an appointment at City Hall.',
+if not sent then
+    print('Email could not be sent')
+end
+```
+
+LB Phone can also be addressed directly:
+
+```lua
+Dank.phone.sendEmail(source, {
+    to = 'citizen@lb-phone.com',
+    sender = 'City Services',
+    subject = 'Receipt',
+    message = 'Your payment was received.',
+    attachments = {
+        { type = 'image', source = 'https://example.com/receipt.png' }
+    }
 })
 ```
 
-### Supported Phone Systems
+### SMS data
 
-lb-phone · qs-smartphone · qb-phone · gksphone · yseries (yphone) · npwd
+| Field | Type | Required | Description |
+|---|---|:---:|---|
+| `number` | `string` | Adapter-specific | Destination number used by LB Phone, GKS Phone, YSeries, and NPWD. |
+| `message` | `string` | No | Message body. Empty/nil handling is adapter-specific. |
+| `from` | `string` | No | Sender number/name. Preferred for LB Phone. |
+| `sender` | `string` | No | Compatible sender alias. |
+| `attachments` | `table` | No | LB Phone attachments. |
+
+```lua
+local sent = Dank.phone.sendSMS(source, {
+    number = '5550123',
+    from = 'City Services',
+    message = 'Your vehicle is ready for collection.'
+})
+
+if not sent then
+    print('SMS could not be sent')
+end
+```
+
+Some legacy adapters surface SMS through their notification/event API rather than storing a conversation thread.
+
+### Supported phone systems
+
+- `lb-phone`
+- `qs-smartphone`
+- `qs-smartphone-pro`
+- `qb-phone`
+- `gksphone`
+- `yseries`
+- `yphone`
+- `npwd`
 
 ---
 
-[← Back to README](../README.md)
+[Back to documentation index](../README.md)

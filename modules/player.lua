@@ -1,8 +1,11 @@
 local exports = exports
 local print = print
+local tonumber = tonumber
+local tostring = tostring
+local type = type
 
 local sharedConfig = require 'config.dankutils_shared'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
 
 ---@class DankPlayer
 local player = {}
@@ -53,12 +56,13 @@ if IsDuplicityVersion() then
         if not p then return { firstname = '', lastname = '', birthdate = '', gender = 0, nationality = '' } end
         
         if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
+            local charinfo = p.PlayerData and p.PlayerData.charinfo or {}
             return {
-                firstname = p.PlayerData.charinfo.firstname or '',
-                lastname = p.PlayerData.charinfo.lastname or '',
-                birthdate = p.PlayerData.charinfo.birthdate or '',
-                gender = p.PlayerData.charinfo.gender or 0,
-                nationality = p.PlayerData.charinfo.nationality or ''
+                firstname = charinfo.firstname or '',
+                lastname = charinfo.lastname or '',
+                birthdate = charinfo.birthdate or '',
+                gender = charinfo.gender or 0,
+                nationality = charinfo.nationality or ''
             }
         elseif sharedConfig.Framework == 'es_extended' then
             return {
@@ -118,7 +122,10 @@ if IsDuplicityVersion() then
         local p = player.get(source)
         if not p then return false end
 
-        if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
+        if sharedConfig.Framework == 'qbx_core' then
+            exports.qbx_core:SetMetadata(source, key, val)
+            return true
+        elseif sharedConfig.Framework == 'qb-core' then
             p.Functions.SetMetaData(key, val)
             return true
         elseif sharedConfig.Framework == 'es_extended' then
@@ -148,11 +155,12 @@ if IsDuplicityVersion() then
         if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
             local job = p.PlayerData.job
             if not job then return fallback end
+            local grade = job.grade or {}
             return {
                 name = job.name,
                 grade = {
-                    name = job.grade.name,
-                    level = job.grade.level
+                    name = grade.name or 'Employee',
+                    level = grade.level or grade.grade or 0
                 }
             }
         elseif sharedConfig.Framework == 'es_extended' then
@@ -200,7 +208,10 @@ if IsDuplicityVersion() then
         local p = player.get(source)
         if not p then return false end
 
-        if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
+        gradeLevel = tonumber(gradeLevel) or gradeLevel
+        if sharedConfig.Framework == 'qbx_core' then
+            return exports.qbx_core:SetJob(source, jobName, gradeLevel)
+        elseif sharedConfig.Framework == 'qb-core' then
             return p.Functions.SetJob(jobName, gradeLevel)
         elseif sharedConfig.Framework == 'es_extended' then
             p.setJob(jobName, gradeLevel)
@@ -223,7 +234,9 @@ if IsDuplicityVersion() then
         local p = player.get(source)
         if not p then return 0 end
 
-        if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
+        if sharedConfig.Framework == 'qbx_core' then
+            return exports.qbx_core:GetMoney(source, account) or 0
+        elseif sharedConfig.Framework == 'qb-core' then
             return p.PlayerData.money[account] or 0
         elseif sharedConfig.Framework == 'es_extended' then
             if account == 'cash' then account = 'money' end
@@ -247,10 +260,14 @@ if IsDuplicityVersion() then
     ---@return boolean
     player.removeMoney = function(source, account, amount, reason)
         LogDebug(('[player] removeMoney(source=%s, account=%s, amount=%s)'):format(tostring(source), tostring(account), tostring(amount)))
+        amount = tonumber(amount)
+        if not amount or amount <= 0 then return false end
         local p = player.get(source)
         if not p then return false end
 
-        if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
+        if sharedConfig.Framework == 'qbx_core' then
+            return exports.qbx_core:RemoveMoney(source, account, amount, reason)
+        elseif sharedConfig.Framework == 'qb-core' then
             return p.Functions.RemoveMoney(account, amount, reason)
         elseif sharedConfig.Framework == 'es_extended' then
             if account == 'cash' then account = 'money' end
@@ -279,10 +296,14 @@ if IsDuplicityVersion() then
     ---@return boolean
     player.addMoney = function(source, account, amount, reason)
         LogDebug(('[player] addMoney(source=%s, account=%s, amount=%s)'):format(tostring(source), tostring(account), tostring(amount)))
+        amount = tonumber(amount)
+        if not amount or amount <= 0 then return false end
         local p = player.get(source)
         if not p then return false end
 
-        if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
+        if sharedConfig.Framework == 'qbx_core' then
+            return exports.qbx_core:AddMoney(source, account, amount, reason)
+        elseif sharedConfig.Framework == 'qb-core' then
             if p.Functions and p.Functions.AddMoney then
                 return p.Functions.AddMoney(account, amount, reason)
             end
@@ -427,11 +448,12 @@ else
         if sharedConfig.Framework == 'qbx_core' or sharedConfig.Framework == 'qb-core' then
             local job = data.job
             if not job then return fallback end
+            local grade = job.grade or {}
             return {
                 name = job.name,
                 grade = {
-                    name = job.grade.name,
-                    level = job.grade.level
+                    name = grade.name or 'Employee',
+                    level = grade.level or grade.grade or 0
                 }
             }
         elseif sharedConfig.Framework == 'es_extended' then
@@ -475,7 +497,11 @@ else
     player.getData = function()
         LogDebug(('[player] getData framework=%s [client]'):format(tostring(sharedConfig.Framework)))
         if sharedConfig.Framework == 'qbx_core' then
-            return exports.qbx_core:GetPlayerData() or {}
+            if QBX and QBX.PlayerData then return QBX.PlayerData end
+            local ok, data = pcall(function()
+                return exports.qbx_core:GetPlayerData()
+            end)
+            return ok and data or {}
         elseif sharedConfig.Framework == 'qb-core' then
             local core = exports['qb-core']:GetCoreObject()
             return core and core.Functions.GetPlayerData() or {}

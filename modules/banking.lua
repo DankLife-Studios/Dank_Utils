@@ -5,7 +5,15 @@ local type = type
 
 local sharedConfig = require 'config.dankutils_shared'
 local playerModule = require 'modules.player'
-local LogDebug = LogDebug
+local LogDebug = LogDebug or function() end
+
+---@param amount any
+---@return number|nil
+local function normalizeAmount(amount)
+    amount = tonumber(amount)
+    if not amount or amount <= 0 then return nil end
+    return amount
+end
 
 ---@class DankBanking
 local banking = {}
@@ -21,7 +29,7 @@ if IsDuplicityVersion() then
         if sys == 'okokBanking' or sys == 'qb-banking' or sys == 'qb-management' or sys == 'fd_banking' then
             local data = exports[sys]:GetAccount(account)
             if type(data) == 'table' then
-                return data.balance or data.money or 0
+                return data.balance or data.account_balance or data.money or 0
             end
             return tonumber(data) or 0
         elseif sys == 'pefcl' then
@@ -48,7 +56,8 @@ if IsDuplicityVersion() then
     ---@param amount number
     ---@return any
     banking.addMoney = function(account, amount)
-        amount = tonumber(amount) or 0
+        amount = normalizeAmount(amount)
+        if not amount then return false end
         local sys = sharedConfig.Banking
         LogDebug(('[banking] addMoney(account=%s, amount=%s) system=%s'):format(tostring(account), tostring(amount), tostring(sys)))
         if sys == 'okokBanking' or sys == 'qb-banking' or sys == 'qb-management' or sys == 'fd_banking' then
@@ -77,7 +86,8 @@ if IsDuplicityVersion() then
     ---@param amount number
     ---@return any
     banking.removeMoney = function(account, amount)
-        amount = tonumber(amount) or 0
+        amount = normalizeAmount(amount)
+        if not amount then return false end
         local sys = sharedConfig.Banking
         LogDebug(('[banking] removeMoney(account=%s, amount=%s) system=%s'):format(tostring(account), tostring(amount), tostring(sys)))
         if sys == 'okokBanking' or sys == 'qb-banking' or sys == 'qb-management' or sys == 'fd_banking' then
